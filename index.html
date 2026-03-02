@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Öğrenci Program Sistemi</title>
+
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+
+<style>
+body{font-family:Arial;margin:20px}
+textarea{width:100%;height:250px;margin-top:10px}
+button{padding:10px 15px;margin-top:10px}
+</style>
+</head>
+
+<body>
+
+<h2>Haftalık Öğrenci Program Sistemi</h2>
+
+<select id="grade">
+<option value="5">5. Sınıf</option>
+<option value="6">6. Sınıf</option>
+<option value="7">7. Sınıf</option>
+<option value="8">8. Sınıf</option>
+</select>
+
+<label><input type="checkbox" id="includeQuestions"/> Soru önerileri eklensin</label>
+<label><input type="checkbox" id="excludeEnglish"/> İngilizce hariç</label>
+
+<textarea id="input" placeholder="TAB ayrımlı analiz verisini buraya yapıştır"></textarea>
+
+<br>
+<button onclick="generate()">Excel Oluştur</button>
+
+<script>
+
+const DAYS=["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"]
+
+function parseTSV(text){
+let lines=text.trim().split("\n")
+let headers=lines[0].split("\t")
+let data=[]
+for(let i=1;i<lines.length;i++){
+let cols=lines[i].split("\t")
+data.push({
+Sube:cols[0],
+Numara:cols[1],
+Adi:cols[2],
+Ders:cols[3],
+Konu:cols[5],
+Oncelik:parseInt(cols[6]||999)
+})
+}
+return data
+}
+
+function getSlotCount(grade){
+if(grade=="5"||grade=="6") return 14
+return 21
+}
+
+function getPerDay(grade){
+if(grade=="5"||grade=="6") return 2
+return 3
+}
+
+function getQuestionCount(grade,ders){
+let sayisal=["Matematik","Fen","Fen Bilimleri"]
+let sozelDefault={
+5:{S:5,Z:10},
+6:{S:8,Z:12},
+7:{S:10,Z:15},
+8:{S:15,Z:20}
+}
+let type=sayisal.includes(ders)?"S":"Z"
+return sozelDefault[grade][type]
+}
+
+async function generate(){
+
+let grade=document.getElementById("grade").value
+let includeQ=document.getElementById("includeQuestions").checked
+let excludeEng=document.getElementById("excludeEnglish").checked
+
+let rows=parseTSV(document.getElementById("input").value)
+
+if(excludeEng){
+rows=rows.filter(r=>r.Ders!="İngilizce")
+}
+
+rows.sort((a,b)=>a.Oncelik-b.Oncelik)
+
+let totalSlots=getSlotCount(grade)
+let perDay=getPerDay(grade)
+
+while(rows.length<totalSlots){
+rows.push(rows[rows.length%rows.length])
+}
+
+let wb=new ExcelJS.Workbook()
+let ws=wb.addWorksheet("Program")
+
+ws.columns=[
+{width:15},{width:50},{width:10},{width:50},{width:10},{width:50}
+]
+
+ws.addRow(["Gün","1.Ders","Soru","2.Ders","Soru","3.Ders"])
+
+let index=0
+for(let d=0;d<7;d++){
+let row=[DAYS[d]]
+for(let s=0;s<perDay;s++){
+let item=rows[index++]
+row.push(item.Ders+" - "+item.Konu)
+if(includeQ){
+row.push(getQuestionCount(grade,item.Ders))
+}else{
+row.push("")
+}
+}
+ws.addRow(row)
+}
+
+let buf=await wb.xlsx.writeBuffer()
+let blob=new Blob([buf])
+let link=document.createElement("a")
+link.href=URL.createObjectURL(blob)
+link.download="program.xlsx"
+link.click()
+
+}
+
+</script>
+
+</body>
+</html>
