@@ -1,4 +1,4 @@
-<!doctype html>
+github.com/burakkteacher/ogrenci-program<!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
@@ -369,7 +369,7 @@ function buildPlan(items, grade, thirdMode){
 }
 
 /* -------------------- Logo helper -------------------- */
-async function fetchImageAsBase64(url){
+async async function fetchImageAsBase64(url){
   const res = await fetch(url, {cache:"no-store"});
   if(!res.ok) throw new Error("logo fetch failed");
   const blob = await res.blob();
@@ -467,7 +467,7 @@ async function buildWorkbook(students, settings){
     ws.mergeCells("F2","G2");
 
     const h2L = ws.getCell("A2");
-    h2L.value = `${title} | ${mid}`;
+    h2L.value = `Öğrenci Bazlı Haftalık Çalışma Programı | ${sube} • No: ${numara} • ${adi}`;
     h2L.font = {name:"Calibri", size:11, bold:true, color:{argb:"FFFFFF"}};
     h2L.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"0E2A47"}};
     h2L.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
@@ -624,11 +624,11 @@ async function buildWorkbook(students, settings){
     const noteBottom = noteTop + 2;
     ws.mergeCells(`H${noteTop}`, `J${noteBottom}`);
     const note = ws.getCell(`H${noteTop}`);
-    note.value = [
-      {text:"NOT:\n", font:{bold:true}},
+    note.value = { richText: [
+      {text:"NOT: ", font:{bold:true}},
       {text:"SINAVZA tarafından yapılan analizle, öncelikli konu listesine göre kişiye özel hazırlanmıştır.", font:{bold:true}},
-      ...(dateStr ? [{text:`\nOluşturulma: ${dateStr}`, font:{bold:false}}] : [])
-    ];
+      ...(dateStr ? [{text:`  Oluşturulma: ${dateStr}`, font:{bold:false}}] : [])
+    ]};
     note.alignment = {vertical:"top", horizontal:"left", wrapText:true};
     note.fill = fill("#F2F2F2");
     note.border = thickBorder();
