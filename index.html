@@ -687,7 +687,11 @@ document.getElementById("btnDownload").addEventListener("click", async () => {
     let filtered = rows;
 
     if(!includeEnglish){
-      filtered = rows.filter(r => r.ders.trim().toLowerCase() !== "ingilizce");
+      filtered = rows.filter(r => {
+        const dersKey = trLower((r.ders||"")).replace(/\s+/g,' ').trim();
+        const isEnglish = (dersKey.includes('ingilizce') || dersKey === 'eng' || dersKey.startsWith('eng ') || dersKey.includes(' eng '));
+        return !isEnglish;
+      });
     }
 
     const students = groupByStudent(filtered);
