@@ -288,6 +288,21 @@ function decideEnglishMode(grade, engMode){
   return grade !== 5;
 }
 
+function trLower(s){
+  return (s ?? '').toString().toLocaleLowerCase('tr-TR');
+}
+function normalizeKey(s){
+  return trLower(s)
+    .normalize('NFKD')
+    .replace(/\p{Diacritic}/gu,'')
+    .replace(/[^a-z0-9]+/g,'')
+    .trim();
+}
+function isEnglishLesson(ders){
+  const k = normalizeKey(ders);
+  return k === 'ingilizce' || k.startsWith('eng') || k.includes('ingilizce');
+}
+
 function isNumericSubject(ders){
   const n = ders.toLowerCase();
   return n.includes("mat") || n.includes("fen");
