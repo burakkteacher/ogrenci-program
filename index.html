@@ -1,137 +1,703 @@
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Öğrenci Program Sistemi</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Altınküre • Öğrenci Bazlı Haftalık Çalışma Programı</title>
 
-<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <!-- ExcelJS -->
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <!-- FileSaver -->
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
-<style>
-body{font-family:Arial;margin:20px}
-textarea{width:100%;height:250px;margin-top:10px}
-button{padding:10px 15px;margin-top:10px}
-</style>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#0f172a;
+      --muted:#9aa4b2;
+      --text:#e6edf6;
+      --line:#22304a;
+      --accent:#3b82f6;
+      --good:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+    }
+    body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:#0b1220; color:var(--text); }
+    .wrap{ max-width:1100px; margin:18px auto; padding:0 14px 30px; }
+    .header{ display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .title{ font-size:18px; font-weight:700; }
+    .sub{ color:var(--muted); font-size:12px; margin-top:2px; }
+    .card{ background:linear-gradient(180deg,#0f172a,#0b1220); border:1px solid var(--line); border-radius:14px; padding:14px; }
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width:900px){ .grid{ grid-template-columns:1fr; } }
+    label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+    select,input,textarea,button{
+      width:100%; box-sizing:border-box;
+      border:1px solid var(--line);
+      background:#0b1220;
+      color:var(--text);
+      border-radius:10px;
+      padding:10px 10px;
+      font-size:13px;
+      outline:none;
+    }
+    textarea{ height:210px; resize:vertical; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .row{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    @media (max-width:700px){ .row{ grid-template-columns:1fr; } }
+    .row3{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; }
+    @media (max-width:900px){ .row3{ grid-template-columns:1fr; } }
+    .inline{ display:flex; gap:10px; align-items:center; }
+    .inline > *{ flex:1; }
+    .inline small{ flex:0 0 auto; color:var(--muted); }
+    .btnbar{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    button{ cursor:pointer; font-weight:700; }
+    .primary{ background:linear-gradient(180deg,#2563eb,#1d4ed8); border:1px solid #1e40af; }
+    .ghost{ background:transparent; }
+    .hint{ color:var(--muted); font-size:12px; line-height:1.45; margin-top:8px; }
+    .pill{ display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; font-size:11px; color:var(--muted); }
+    .footerNote{ margin-top:10px; color:var(--muted); font-size:12px; }
+  </style>
 </head>
-
 <body>
+<div class="wrap">
+  <div class="header">
+    <div>
+      <div class="title">Öğrenci Bazlı Haftalık Çalışma Programı <span class="pill">Altınküre v1</span></div>
+      <div class="sub">Excel çıktısı üretir (çoklu öğrenci → her öğrenci ayrı sayfa). Analiz verisini buraya yapıştır.</div>
+    </div>
+  </div>
 
-<h2>Haftalık Öğrenci Program Sistemi</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="row3">
+        <div>
+          <label>Sınıf Seviyesi</label>
+          <select id="grade">
+            <option value="5">5. Sınıf</option>
+            <option value="6">6. Sınıf</option>
+            <option value="7">7. Sınıf</option>
+            <option value="8">8. Sınıf</option>
+          </select>
+        </div>
 
-<select id="grade">
-<option value="5">5. Sınıf</option>
-<option value="6">6. Sınıf</option>
-<option value="7">7. Sınıf</option>
-<option value="8">8. Sınıf</option>
-</select>
+        <div>
+          <label>İngilizce</label>
+          <select id="engMode">
+            <option value="auto">Otomatik (5'lerde kapalı)</option>
+            <option value="on">Dahil et</option>
+            <option value="off">Hariç tut</option>
+          </select>
+        </div>
 
-<label><input type="checkbox" id="includeQuestions"/> Soru önerileri eklensin</label>
-<label><input type="checkbox" id="excludeEnglish"/> İngilizce hariç</label>
+        <div>
+          <label>Tarih</label>
+          <select id="dateMode">
+            <option value="none">Yok</option>
+            <option value="today">Bugün</option>
+            <option value="manual">Manuel seç</option>
+          </select>
+        </div>
+      </div>
 
-<textarea id="input" placeholder="TAB ayrımlı analiz verisini buraya yapıştır"></textarea>
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label>Manuel Tarih</label>
+          <input id="dateManual" type="date" disabled />
+        </div>
+        <div>
+          <label>3. Ders</label>
+          <select id="thirdMode">
+            <option value="auto">Otomatik (konu sayısına göre)</option>
+            <option value="on">Her gün 3 ders</option>
+            <option value="off">Sadece 2 ders</option>
+          </select>
+        </div>
+      </div>
 
-<br>
-<button onclick="generate()">Excel Oluştur</button>
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label>Soru Sayısı (Sayısal / Sözel)</label>
+          <div class="inline">
+            <input id="qNum" type="number" min="0" step="1" />
+            <small>/</small>
+            <input id="qVer" type="number" min="0" step="1" />
+          </div>
+          <div class="hint">Varsayılanlar: 5→5/10, 6→8/12, 7→10/15, 8→15/20. İstersen değiştir.</div>
+        </div>
+        <div>
+          <label>Soru Çarpanı</label>
+          <select id="qScale">
+            <option value="1">Standart</option>
+            <option value="0.8">Biraz azalt (×0.8)</option>
+            <option value="1.2">Biraz artır (×1.2)</option>
+          </select>
+          <div class="hint">Soru önerileri otomatik üretilir; bu çarpanla genel artır/azalt yapabilirsin.</div>
+        </div>
+      </div>
+
+      <div class="btnbar">
+        <button class="primary" id="btnXlsx">Excel indir (.xlsx)</button>
+        <button class="ghost" id="btnDemo">Demo veri doldur</button>
+        <button class="ghost" id="btnClear">Temizle</button>
+      </div>
+
+      <div class="footerNote">Not: Excel’de emoji desteği cihaz/uygulamaya göre değişebilir. Bu yüzden ders kodu (MAT/TR/...) da yazdırılır.</div>
+    </div>
+
+    <div class="card">
+      <label>Analiz Verisi (TAB ayrımlı)</label>
+      <textarea id="input" placeholder="Sube	Numara	Adi	Ders	Konu	Id	Konu	Oncelik Sira
+5-A	1021	Nisanur İskender	Matematik	151000	Doğal Sayılar	1
+..."></textarea>
+      <div class="hint">
+        Gerekli alanlar: <b>Sube</b>, <b>Numara</b>, <b>Adi</b>, <b>Ders</b>, <b>Konu</b>, <b>Oncelik Sira</b>.<br/>
+        Diğer sütunlar olabilir; program sadece bunları kullanır.
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
+const title = "Öğrenci Bazlı Haftalık Çalışma Programı";
+/* -------------------- Defaults -------------------- */
+const DAYS = ["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
 
-const DAYS=["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"]
+const GRADE_DEFAULTS = {
+  5: { qNum: 5, qVer: 10 },
+  6: { qNum: 8, qVer: 12 },
+  7: { qNum: 10, qVer: 15 },
+  8: { qNum: 15, qVer: 20 },
+};
 
-function parseTSV(text){
-let lines=text.trim().split("\n")
-let headers=lines[0].split("\t")
-let data=[]
-for(let i=1;i<lines.length;i++){
-let cols=lines[i].split("\t")
-data.push({
-Sube:cols[0],
-Numara:cols[1],
-Adi:cols[2],
-Ders:cols[3],
-Konu:cols[5],
-Oncelik:parseInt(cols[6]||999)
-})
-}
-return data
-}
+const SUBJECT_META = {
+  "Matematik": { code:"MAT", emoji:"🧮", fill:"DDEBFF" },
+  "Türkçe": { code:"TR", emoji:"📚", fill:"FFE7D6" },
+  "Fen Bilimleri": { code:"FEN", emoji:"🔬", fill:"E7FFEF" },
+  "Sosyal Bilgiler": { code:"SOS", emoji:"🌍", fill:"F0E7FF" },
+  "İnkılap": { code:"INK", emoji:"🌍", fill:"F0E7FF" },
+  "Din Kültürü": { code:"DİN", emoji:"🤲", fill:"FFF7D6" },
+  "Din Kültürü ve Ahlak Bilgisi": { code:"DİN", emoji:"🤲", fill:"FFF7D6" },
+  "İngilizce": { code:"ENG", emoji:"🇬🇧", fill:"FFE3F1" },
+};
 
-function getSlotCount(grade){
-if(grade=="5"||grade=="6") return 14
-return 21
-}
-
-function getPerDay(grade){
-if(grade=="5"||grade=="6") return 2
-return 3
-}
-
-function getQuestionCount(grade,ders){
-let sayisal=["Matematik","Fen","Fen Bilimleri"]
-let sozelDefault={
-5:{S:5,Z:10},
-6:{S:8,Z:12},
-7:{S:10,Z:15},
-8:{S:15,Z:20}
-}
-let type=sayisal.includes(ders)?"S":"Z"
-return sozelDefault[grade][type]
+function subjectMeta(name){
+  if(!name) return {code:"DERS", emoji:"", fill:"F3F4F6"};
+  if(SUBJECT_META[name]) return SUBJECT_META[name];
+  // normalize common variants
+  const n = name.trim().toLowerCase();
+  if(n.includes("mat")) return SUBJECT_META["Matematik"];
+  if(n.includes("türk")) return SUBJECT_META["Türkçe"];
+  if(n.includes("fen")) return SUBJECT_META["Fen Bilimleri"];
+  if(n.includes("sos")) return SUBJECT_META["Sosyal Bilgiler"];
+  if(n.includes("ink")) return SUBJECT_META["İnkılap"];
+  if(n.includes("din")) return SUBJECT_META["Din Kültürü"];
+  if(n.includes("ing")) return SUBJECT_META["İngilizce"];
+  return {code:name.slice(0,4).toUpperCase(), emoji:"", fill:"F3F4F6"};
 }
 
-async function generate(){
+/* -------------------- UI wiring -------------------- */
+const elGrade = document.getElementById("grade");
+const elEngMode = document.getElementById("engMode");
+const elDateMode = document.getElementById("dateMode");
+const elDateManual = document.getElementById("dateManual");
+const elThirdMode = document.getElementById("thirdMode");
+const elQNum = document.getElementById("qNum");
+const elQVer = document.getElementById("qVer");
+const elQScale = document.getElementById("qScale");
+const elInput = document.getElementById("input");
 
-let grade=document.getElementById("grade").value
-let includeQ=document.getElementById("includeQuestions").checked
-let excludeEng=document.getElementById("excludeEnglish").checked
+function applyGradeDefaults(){
+  const g = Number(elGrade.value);
+  elQNum.value = GRADE_DEFAULTS[g].qNum;
+  elQVer.value = GRADE_DEFAULTS[g].qVer;
+}
+applyGradeDefaults();
 
-let rows=parseTSV(document.getElementById("input").value)
+elGrade.addEventListener("change", () => applyGradeDefaults());
 
-if(excludeEng){
-rows=rows.filter(r=>r.Ders!="İngilizce")
+elDateMode.addEventListener("change", () => {
+  elDateManual.disabled = (elDateMode.value !== "manual");
+});
+
+document.getElementById("btnClear").addEventListener("click", () => elInput.value = "");
+
+document.getElementById("btnDemo").addEventListener("click", () => {
+  elInput.value =
+`Sube\tNumara\tAdi\tDers\tKonu\tOncelik Sira
+5-A\t1021\tNisanur İskender\tMatematik\tDoğal Sayılar\t1
+5-A\t1021\tNisanur İskender\tTürkçe\tCümlede Anlam\t2
+5-A\t1021\tNisanur İskender\tİngilizce\tAsking For And Giving Directions\t3
+5-A\t1021\tNisanur İskender\tFen Bilimleri\tGökyüzündeki Komşumuz: Ay\t4
+`;
+});
+
+/* -------------------- Parsing -------------------- */
+function parseTSV(tsv){
+  const lines = tsv.trim().split(/\r?\n/).filter(Boolean);
+  if(lines.length < 2) return [];
+  const header = lines[0].split("\t").map(s => s.trim());
+  const idx = (name) => header.findIndex(h => h.toLowerCase() === name.toLowerCase());
+  const iSube = idx("Sube");
+  const iNo = idx("Numara");
+  const iAdi = idx("Adi");
+  const iDers = idx("Ders");
+  const iKonu = idx("Konu");
+  // allow variations
+  const iPrio = header.findIndex(h => h.toLowerCase().includes("oncelik"));
+  if([iSube,iNo,iAdi,iDers,iKonu,iPrio].some(i => i < 0)){
+    throw new Error("Gerekli kolonlar bulunamadı. (Sube, Numara, Adi, Ders, Konu, Oncelik Sira)");
+  }
+  const rows = [];
+  for(let r=1;r<lines.length;r++){
+    const cols = lines[r].split("\t");
+    rows.push({
+      sube: (cols[iSube]||"").trim(),
+      numara: (cols[iNo]||"").trim(),
+      adi: (cols[iAdi]||"").trim(),
+      ders: (cols[iDers]||"").trim(),
+      konu: (cols[iKonu]||"").trim(),
+      prio: Number((cols[iPrio]||"").trim()) || 999
+    });
+  }
+  return rows;
 }
 
-rows.sort((a,b)=>a.Oncelik-b.Oncelik)
-
-let totalSlots=getSlotCount(grade)
-let perDay=getPerDay(grade)
-
-while(rows.length<totalSlots){
-rows.push(rows[rows.length%rows.length])
+function groupByStudent(rows){
+  const map = new Map();
+  for(const r of rows){
+    const key = `${r.sube}||${r.numara}||${r.adi}`;
+    if(!map.has(key)) map.set(key, []);
+    map.get(key).push(r);
+  }
+  // sort topics per student by priority then stable
+  const out = [];
+  for(const [key, items] of map.entries()){
+    items.sort((a,b)=> (a.prio-b.prio) || a.ders.localeCompare(b.ders) || a.konu.localeCompare(b.konu));
+    const [sube,numara,adi] = key.split("||");
+    out.push({sube,numara,adi, items});
+  }
+  out.sort((a,b)=> a.sube.localeCompare(b.sube) || a.numara.localeCompare(b.numara));
+  return out;
 }
 
-let wb=new ExcelJS.Workbook()
-let ws=wb.addWorksheet("Program")
-
-ws.columns=[
-{width:15},{width:50},{width:10},{width:50},{width:10},{width:50}
-]
-
-ws.addRow(["Gün","1.Ders","Soru","2.Ders","Soru","3.Ders"])
-
-let index=0
-for(let d=0;d<7;d++){
-let row=[DAYS[d]]
-for(let s=0;s<perDay;s++){
-let item=rows[index++]
-row.push(item.Ders+" - "+item.Konu)
-if(includeQ){
-row.push(getQuestionCount(grade,item.Ders))
-}else{
-row.push("")
-}
-}
-ws.addRow(row)
+/* -------------------- Scheduling -------------------- */
+function decideEnglishMode(grade, engMode){
+  if(engMode === "on") return true;
+  if(engMode === "off") return false;
+  // auto: 5'lerde kapalı, diğerlerinde açık
+  return grade !== 5;
 }
 
-let buf=await wb.xlsx.writeBuffer()
-let blob=new Blob([buf])
-let link=document.createElement("a")
-link.href=URL.createObjectURL(blob)
-link.download="program.xlsx"
-link.click()
-
+function isNumericSubject(ders){
+  const n = ders.toLowerCase();
+  return n.includes("mat") || n.includes("fen");
 }
 
+function buildPlan(items, grade, thirdMode){
+  // unique by (ders, konu) keeping best priority
+  const seen = new Set();
+  const topics = [];
+  for(const it of items){
+    const k = `${it.ders}||${it.konu}`;
+    if(seen.has(k)) continue;
+    seen.add(k);
+    topics.push(it);
+  }
+
+  const slotPerDay = (thirdMode==="on") ? 3 : 2;
+  const maxSlots = slotPerDay * 7;
+
+  // auto third lesson if too many topics
+  let slots = 14;
+  if(thirdMode==="on") slots = 21;
+  if(thirdMode==="off") slots = 14;
+  if(thirdMode==="auto"){
+    slots = (topics.length > 14) ? 21 : 14;
+  }
+
+  const use3 = (slots === 21);
+  const slotsPerDayFinal = use3 ? 3 : 2;
+
+  // split into numeric / verbal
+  const numeric = topics.filter(t => isNumericSubject(t.ders));
+  const verbal  = topics.filter(t => !isNumericSubject(t.ders));
+
+  // Balanced interleave based on desired ratio: numeric/verbal per week
+  const targetNum = Math.round(slots * 0.45); // default balance
+  const targetVer = slots - targetNum;
+
+  // pull from lists by priority
+  const pick = [];
+  let ni=0, vi=0;
+  for(let i=0;i<slots;i++){
+    const wantNumeric = (pick.length < targetNum) && ( (i%2===0) || (verbal.length===0) );
+    if(wantNumeric && ni < numeric.length){
+      pick.push(numeric[ni++]);
+    }else if(vi < verbal.length){
+      pick.push(verbal[vi++]);
+    }else if(ni < numeric.length){
+      pick.push(numeric[ni++]);
+    }else{
+      // if not enough topics, repeat from start
+      pick.push(topics[i % Math.max(1, topics.length)] || {ders:"", konu:"", prio:999});
+    }
+  }
+
+  // Avoid same subject twice same day when possible
+  const plan = DAYS.map(_ => ({d1:null,d2:null,d3:null}));
+  let idx=0;
+  for(let d=0; d<7; d++){
+    const daySlots = [];
+    for(let s=0; s<slotsPerDayFinal; s++) daySlots.push(pick[idx++]);
+    // swap to reduce same ders
+    if(daySlots.length >= 2 && daySlots[0] && daySlots[1] && daySlots[0].ders === daySlots[1].ders){
+      // find later different
+      for(let j=d*slotsPerDayFinal+2; j<pick.length; j++){
+        if(pick[j] && pick[j].ders !== daySlots[0].ders){
+          const tmp = daySlots[1];
+          daySlots[1] = pick[j];
+          pick[j] = tmp;
+          break;
+        }
+      }
+    }
+    plan[d].d1 = daySlots[0] || null;
+    plan[d].d2 = daySlots[1] || null;
+    plan[d].d3 = (slotsPerDayFinal===3) ? (daySlots[2]||null) : null;
+  }
+  return {plan, use3};
+}
+
+/* -------------------- Logo helper -------------------- */
+async function fetchImageAsBase64(url){
+  const res = await fetch(url, {cache:"no-store"});
+  if(!res.ok) throw new Error("logo fetch failed");
+  const blob = await res.blob();
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]); // base64 part
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function formatDateTR(yyyy_mm_dd){
+  if(!yyyy_mm_dd) return "";
+  const [y,m,d] = yyyy_mm_dd.split("-").map(Number);
+  if(!y||!m||!d) return "";
+  const dd = String(d).padStart(2,"0");
+  const mm = String(m).padStart(2,"0");
+  return `${dd}.${mm}.${y}`;
+}
+
+/* -------------------- Excel generation -------------------- */
+function thickBorder(){
+  return { top:{style:"thick"}, left:{style:"thick"}, bottom:{style:"thick"}, right:{style:"thick"} };
+}
+function thinBorder(){
+  return { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
+}
+function fill(hex){
+  return { type:"pattern", pattern:"solid", fgColor:{argb: "FF"+hex.replace("#","")} };
+}
+function font(opts){
+  return Object.assign({name:"Arial", size:11}, opts||{});
+}
+function center(){ return { vertical:"middle", horizontal:"center", wrapText:true }; }
+function leftWrap(){ return { vertical:"middle", horizontal:"left", wrapText:true }; }
+
+async function buildWorkbook(students, settings){
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "SINAVZA";
+  wb.created = new Date();
+
+  // Try logo if exists in repo root (logo.png)
+  let logoId = null;
+  try{
+    const b64 = await fetchImageAsBase64("logo.png");
+    logoId = wb.addImage({ base64: b64, extension:"png" });
+  }catch(e){
+    logoId = null;
+  }
+
+  for(const st of students){
+    const ws = wb.addWorksheet(`${st.numara}-${st.adi}`.slice(0,31));
+    const mid = `${st.sube} • No: ${st.numara} • ${st.adi}`;
+
+    // columns WITHOUT headers (prevents extra header row)
+    const colDefs = [
+      { key:"gun", width: 14 },
+      { key:"d1", width: 34 },
+      { key:"s1", width: 7 },
+      { key:"c1", width: 4 },
+      { key:"d2", width: 34 },
+      { key:"s2", width: 7 },
+      { key:"c2", width: 4 },
+      { key:"d3", width: 34 },
+      { key:"s3", width: 7 },
+      { key:"c3", width: 4 },
+    ];
+    ws.columns = colDefs;
+
+    // Decide date string
+    let dateStr = "";
+    if(settings.dateMode === "today"){
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth()+1).padStart(2,"0");
+      const d = String(now.getDate()).padStart(2,"0");
+      dateStr = `${d}.${m}.${y}`;
+    }else if(settings.dateMode === "manual"){
+      dateStr = formatDateTR(settings.dateManual);
+    }
+
+    // Header block rows (1-2)
+    // Layout: A1..J2
+    ws.mergeCells("A1","G1");
+    const h1 = ws.getCell("A1");
+    h1.value = "ALTINKÜRE ORTAOKULU";
+    h1.font = {name:"Calibri", size:16, bold:true, color:{argb:"FFFFFF"}};
+    h1.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"0E2A47"}};
+    h1.alignment = {vertical:"middle", horizontal:"left"};
+    h1.border = thickBorder();
+    ws.getRow(1).height = 28;
+
+    // Row 2 split (prevents date clipping in merged cells)
+    ws.mergeCells("A2","E2");
+    ws.mergeCells("F2","G2");
+
+    const h2L = ws.getCell("A2");
+    h2L.value = `${title} | ${mid}`;
+    h2L.font = {name:"Calibri", size:11, bold:true, color:{argb:"FFFFFF"}};
+    h2L.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"0E2A47"}};
+    h2L.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
+    h2L.border = thickBorder();
+
+    const h2R = ws.getCell("F2");
+    h2R.value = dateStr ? `Tarih: ${dateStr}` : "";
+    h2R.font = {name:"Calibri", size:11, bold:true, color:{argb:"FFFFFF"}};
+    h2R.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"0E2A47"}};
+    h2R.alignment = {vertical:"middle", horizontal:"right"};
+    h2R.border = thickBorder();
+
+    ws.getRow(2).height = 24;
+
+    // Place logo (if exists)
+    if(logoId){
+      ws.addImage(logoId, {
+        tl: { col: 5.75, row: 0.15 },
+        ext: { width: 110, height: 40 }
+      });
+    }
+
+    // Table header at row 4
+    const startRow = 4;
+    const headerRow = ws.getRow(startRow);
+
+    // Determine whether 3rd lesson is used for this student
+    const {plan, use3} = buildPlan(st.items, settings.grade, settings.thirdMode);
+
+    // Hide 3rd lesson columns if not used
+    ws.getColumn(8).hidden = !use3;
+    ws.getColumn(9).hidden = !use3;
+    ws.getColumn(10).hidden = !use3;
+
+    // Header labels
+    const headers = [
+      {cell:"A", val:"Gün"},
+      {cell:"B", val:"1. Ders"},
+      {cell:"C", val:"Soru"},
+      {cell:"D", val:"☐"},
+      {cell:"E", val:"2. Ders"},
+      {cell:"F", val:"Soru"},
+      {cell:"G", val:"☐"},
+      {cell:"H", val:"3. Ders (ops.)"},
+      {cell:"I", val:"Soru"},
+      {cell:"J", val:"☐"},
+    ];
+    for(const h of headers){
+      const c = ws.getCell(`${h.cell}${startRow}`);
+      c.value = h.val;
+      c.font = font({bold:true, color:{argb:"FFFFFFFF"}});
+      c.fill = fill("#0B2A5B");
+      c.alignment = center();
+      c.border = thickBorder();
+    }
+    headerRow.height = 24;
+
+    // Table rows (days) start at row 5
+    const baseRow = startRow + 1;
+    const qNum = Math.max(0, Number(settings.qNum)||0);
+    const qVer = Math.max(0, Number(settings.qVer)||0);
+    const scale = Number(settings.qScale)||1;
+
+    for(let i=0;i<7;i++){
+      const r = ws.getRow(baseRow+i);
+      r.height = 44;
+
+      // Day cell (A)
+      const dayCell = ws.getCell(`A${baseRow+i}`);
+      dayCell.value = DAYS[i];
+      dayCell.font = font({bold:true, color:{argb:"FFFFFFFF"}});
+      dayCell.fill = fill("#0B2A5B");
+      dayCell.alignment = center();
+      dayCell.border = thickBorder();
+
+      const slots = [
+        {topic: plan[i].d1, colD:"B", colS:"C", colC:"D"},
+        {topic: plan[i].d2, colD:"E", colS:"F", colC:"G"},
+        {topic: plan[i].d3, colD:"H", colS:"I", colC:"J"},
+      ];
+
+      for(let s=0; s<slots.length; s++){
+        const sl = slots[s];
+        const hidden = (s===2 && !use3);
+
+        const t = sl.topic || {ders:"", konu:"", prio:999};
+        const meta = subjectMeta(t.ders);
+        const dersText = t.ders ? `${meta.emoji} ${meta.code} • ${t.ders}`.trim() : "";
+        const konuText = t.konu ? `${t.konu}` : "";
+        const full = (dersText && konuText) ? `${dersText}\n${konuText}` : (dersText || konuText || "");
+
+        // Lesson cell
+        const dCell = ws.getCell(`${sl.colD}${baseRow+i}`);
+        dCell.value = full;
+        dCell.font = font({bold:true});
+        dCell.alignment = leftWrap();
+        dCell.fill = fill("#"+meta.fill);
+        dCell.border = thickBorder();
+
+        // Question cell
+        const sCell = ws.getCell(`${sl.colS}${baseRow+i}`);
+        const numeric = isNumericSubject(t.ders);
+        const baseQ = numeric ? qNum : qVer;
+        const qVal = Math.max(0, Math.round(baseQ * scale));
+        sCell.value = qVal;
+        sCell.alignment = center();
+        sCell.fill = fill("#FFF7CC");
+        sCell.border = thickBorder();
+        sCell.font = font({bold:true});
+
+        // Checkbox cell
+        const cCell = ws.getCell(`${sl.colC}${baseRow+i}`);
+        cCell.value = ""; // empty
+        cCell.alignment = center();
+        cCell.border = thickBorder();
+
+        if(hidden){
+          dCell.value = null; sCell.value = null; cCell.value = null;
+        }
+      }
+    }
+
+    // Warning row (bold) at baseRow+7+1
+    const warnRowIdx = baseRow + 7 + 1;
+    ws.mergeCells(`B${warnRowIdx}`, `J${warnRowIdx}`);
+    const warnLabel = ws.getCell(`A${warnRowIdx}`);
+    warnLabel.value = "Uyarı:";
+    warnLabel.font = font({bold:true, italic:true, color:{argb:"FFB91C1C"}});
+    warnLabel.alignment = {vertical:"middle", horizontal:"left"};
+    warnLabel.border = thickBorder();
+
+    const warnCell = ws.getCell(`B${warnRowIdx}`);
+    warnCell.value = "⚠️ Ödevleri aksatmayacak şekilde, sınav analizlerinde eksik olan bu konulara çalışıyorsun. Soru çözerek konuları pekiştiriyorsun.";
+    warnCell.font = font({bold:true, color:{argb:"FF7A1F1F"}});
+    warnCell.fill = fill("#FFE7E7");
+    warnCell.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
+    warnCell.border = thickBorder();
+    ws.getRow(warnRowIdx).height = 30;
+
+    // Signature row
+    const signRow = warnRowIdx + 2;
+    ws.mergeCells(`A${signRow}`, `D${signRow}`);
+    ws.mergeCells(`E${signRow}`, `G${signRow}`);
+    ws.mergeCells(`H${signRow}`, `J${signRow}`);
+
+    const s1 = ws.getCell(`A${signRow}`); s1.value="Öğrenci İmza:"; s1.font=font({bold:true}); s1.border=thickBorder();
+    const s2 = ws.getCell(`E${signRow}`); s2.value="Veli İmza:"; s2.font=font({bold:true}); s2.border=thickBorder();
+    const s3 = ws.getCell(`H${signRow}`); s3.value=""; s3.border=thickBorder();
+    ws.getRow(signRow).height = 22;
+
+    // Right-bottom note box (table-integrated)
+    // Place it under signatures, aligned to the right (H..J)
+    const noteTop = signRow + 2;
+    const noteBottom = noteTop + 2;
+    ws.mergeCells(`H${noteTop}`, `J${noteBottom}`);
+    const note = ws.getCell(`H${noteTop}`);
+    note.value = [
+      {text:"NOT:\n", font:{bold:true}},
+      {text:"SINAVZA tarafından yapılan analizle, öncelikli konu listesine göre kişiye özel hazırlanmıştır.", font:{bold:true}},
+      ...(dateStr ? [{text:`\nOluşturulma: ${dateStr}`, font:{bold:false}}] : [])
+    ];
+    note.alignment = {vertical:"top", horizontal:"left", wrapText:true};
+    note.fill = fill("#F2F2F2");
+    note.border = thickBorder();
+    note.font = font({size:10});
+    ws.getRow(noteTop).height = 36;
+    ws.getRow(noteTop+1).height = 36;
+    ws.getRow(noteTop+2).height = 36;
+
+    // Print setup
+    ws.pageSetup = {
+      orientation: "landscape",
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      margins: { left:0.3, right:0.3, top:0.4, bottom:0.4, header:0.2, footer:0.2 }
+    };
+
+    // Freeze panes below header row
+    ws.views = [{ state: "frozen", xSplit: 0, ySplit: startRow }];
+  }
+
+  return wb;
+}
+
+document.getElementById("btnXlsx").addEventListener("click", async () => {
+  try{
+    const grade = Number(elGrade.value);
+    const engModeUI = elEngMode.value;
+    const includeEnglish = decideEnglishMode(grade, engModeUI);
+
+    const rows = parseTSV(elInput.value);
+    let filtered = rows;
+
+    if(!includeEnglish){
+      filtered = rows.filter(r => r.ders.trim().toLowerCase() !== "ingilizce");
+    }
+
+    const students = groupByStudent(filtered);
+    if(students.length === 0){
+      alert("Veri bulunamadı.");
+      return;
+    }
+
+    const settings = {
+      grade,
+      includeEnglish,
+      dateMode: elDateMode.value,
+      dateManual: elDateManual.value,
+      thirdMode: elThirdMode.value,
+      qNum: elQNum.value,
+      qVer: elQVer.value,
+      qScale: elQScale.value,
+    };
+
+    const wb = await buildWorkbook(students, settings);
+    const buf = await wb.xlsx.writeBuffer();
+
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth()+1).padStart(2,"0");
+    const d = String(now.getDate()).padStart(2,"0");
+    const fname = `ogrenci_programlari_${y}-${m}-${d}.xlsx`;
+
+    saveAs(new Blob([buf], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}), fname);
+  }catch(e){
+    console.error(e);
+    alert(e.message || "Hata oluştu.");
+  }
+});
 </script>
-
 </body>
 </html>
