@@ -666,10 +666,7 @@ async function buildWorkbook(students, settings){
     noteTitle.border = thickBorder();
 
     const noteMsg = ws.getCell(`${noteStartCol}${noteMid}`);
-    noteMsg.value = [
-      {text:"SINAVZA ", font:{bold:true}},
-      {text:"tarafından yapılan analizle, öncelikli konu listesine göre kişiye özel hazırlanmıştır.", font:{bold:false}}
-    ];
+    noteMsg.value = "SINAVZA tarafından yapılan analizle, öncelikli konu listesine göre kişiye özel hazırlanmıştır.";
     noteMsg.alignment = { vertical:"top", horizontal:"left", wrapText:true };
     noteMsg.fill = fill("#F6F7FB");
     noteMsg.border = thickBorder();
