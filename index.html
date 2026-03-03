@@ -620,46 +620,65 @@ async function buildWorkbook(students, settings){
     warnCell.fill = fill("#FFE7E7");
     warnCell.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
     warnCell.border = thickBorder();
-    ws.getRow(warnRowIdx).height = 30;
-
-    // Signature row
+    ws.getRow(warnRowIdx).he    // Signature row
     const signRow = warnRowIdx + 2;
+
+    // Two signature boxes (always visible)
     ws.mergeCells(`A${signRow}`, `D${signRow}`);
     ws.mergeCells(`E${signRow}`, `G${signRow}`);
-    ws.mergeCells(`H${signRow}`, `J${signRow}`);
 
-    const s1 = ws.getCell(`A${signRow}`); s1.value="Öğrenci İmza:"; s1.font=font({bold:true}); s1.border=thickBorder();
-    const s2 = ws.getCell(`E${signRow}`); s2.value="Veli İmza:"; s2.font=font({bold:true}); s2.border=thickBorder();
-    const s3 = ws.getCell(`H${signRow}`); s3.value=""; s3.border=thickBorder();
-    ws.getRow(signRow).height = 22;
+    const s1 = ws.getCell(`A${signRow}`);
+    s1.value = "Öğrenci İmza:";
+    s1.font = font({ bold: true });
+    s1.border = thickBorder();
 
-    // Right-bottom note box (table-integrated) — 2-step to avoid richText issues on some viewers
-    const noteTop = signRow + 2;
-    const noteMid = noteTop + 1;
-    const noteBottom = noteTop + 2;
+    const s2 = ws.getCell(`E${signRow}`);
+    s2.value = "Veli İmza:";
+    s2.font = font({ bold: true });
+    s2.border = thickBorder();
 
-    // Title row
-    ws.mergeCells(`H${noteTop}`, `J${noteTop}`);
-    const noteTitle = ws.getCell(`H${noteTop}`);
-    noteTitle.value = "NOT:";
-    noteTitle.alignment = {vertical:"middle", horizontal:"left"};
-    noteTitle.fill = fill("#F2F2F2");
+    // Optional third signature box (only when 3. ders is used)
+    if (use3){
+      ws.mergeCells(`H${signRow}`, `J${signRow}`);
+      const s3 = ws.getCell(`H${signRow}`);
+      s3.value = " ";
+      s3.border = thickBorder();
+    }
+
+    ws.getRow(signRow).height = 24;
+
+    // Premium note box (always created)
+    // 2 ders: E-G altında sağda | 3 ders: H-J altında sağda
+    const noteStartCol = use3 ? "H" : "E";
+    const noteEndCol   = use3 ? "J" : "G";
+    const noteTop = signRow + 1;
+    const noteMid = signRow + 2;
+    const noteBottom = signRow + 3;
+
+    ws.mergeCells(`${noteStartCol}${noteTop}`, `${noteEndCol}${noteTop}`);
+    ws.mergeCells(`${noteStartCol}${noteMid}`, `${noteEndCol}${noteBottom}`);
+
+    const noteTitle = ws.getCell(`${noteStartCol}${noteTop}`);
+    noteTitle.value = "NOT";
+    noteTitle.alignment = { vertical:"middle", horizontal:"center" };
+    noteTitle.font = font({ bold:true, color:{argb:"FFFFFFFF"} });
+    noteTitle.fill = fill("#0B2A55");
     noteTitle.border = thickBorder();
-    noteTitle.font = font({bold:true, size:10});
 
-    // Message box
-    ws.mergeCells(`H${noteMid}`, `J${noteBottom}`);
-    const noteMsg = ws.getCell(`H${noteMid}`);
-    noteMsg.value = "SINAVZA tarafından yapılan analizle, öncelikli konu listesine göre kişiye özel hazırlanmıştır."
-      + (dateStr ? `\nOluşturulma: ${dateStr}` : "");
-    noteMsg.alignment = {vertical:"top", horizontal:"left", wrapText:true};
-    noteMsg.fill = fill("#F2F2F2");
+    const noteMsg = ws.getCell(`${noteStartCol}${noteMid}`);
+    noteMsg.value = [
+      {text:"SINAVZA ", font:{bold:true}},
+      {text:"tarafından yapılan analizle, öncelikli konu listesine göre kişiye özel hazırlanmıştır.", font:{bold:false}}
+    ];
+    noteMsg.alignment = { vertical:"top", horizontal:"left", wrapText:true };
+    noteMsg.fill = fill("#F6F7FB");
     noteMsg.border = thickBorder();
-    noteMsg.font = font({size:10});
+    noteMsg.font = font({ size:10 });
 
-    ws.getRow(noteTop).height = 18;
-    ws.getRow(noteMid).height = 44;
-    ws.getRow(noteBottom).height = 44;
+    ws.getRow(noteTop).height = 20;
+    ws.getRow(noteMid).height = 46;
+    ws.getRow(noteBottom).height = 10;
+
 
     // Print setup
     ws.pageSetup = {
