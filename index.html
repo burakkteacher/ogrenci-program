@@ -634,8 +634,8 @@ async function buildWorkbook(students, settings){
     for(const h of headers){
       const c = ws.getCell(`${h.cell}${startRow}`);
       c.value = h.val;
-      c.font = font({bold:true, color:{argb:"FFFFFFFF"}});
-      c.fill = fill("#0B2A5B");
+      c.font = font({bold:true, color:{argb:"FF111827"}});
+      c.fill = fill("#DBEAFE");
       c.alignment = center();
       c.border = thickBorder();
     }
@@ -654,8 +654,8 @@ async function buildWorkbook(students, settings){
       // Day cell (A)
       const dayCell = ws.getCell(`A${baseRow+i}`);
       dayCell.value = DAYS[i];
-      dayCell.font = font({bold:true, color:{argb:"FFFFFFFF"}});
-      dayCell.fill = fill("#0B2A5B");
+      dayCell.font = font({bold:true, color:{argb:"FF111827"}});
+      dayCell.fill = fill("#DBEAFE");
       dayCell.alignment = center();
       dayCell.border = thickBorder();
 
@@ -762,8 +762,8 @@ async function buildWorkbook(students, settings){
     const noteTitle = ws.getCell(`${noteStartCol}${noteTop}`);
     noteTitle.value = "NOT";
     noteTitle.alignment = { vertical:"middle", horizontal:"center" };
-    noteTitle.font = font({ bold:true, color:{argb:"FFFFFFFF"} });
-    noteTitle.fill = fill("#0B2A55");
+    noteTitle.font = font({ bold:true, color:{argb:"FF111827"} });
+    noteTitle.fill = fill("#BFDBFE");
     noteTitle.border = thickBorder();
 
     const noteMsg = ws.getCell(`${noteStartCol}${noteMid}`);
