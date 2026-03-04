@@ -99,6 +99,26 @@ select,input,textarea,button{
   padding:10px 12px !important;
   border-radius:10px !important;
   border:1px solid var(--line) !important;
+  background-color:#f9fafb !important;
+  color:var(--text) !important;
+}
+
+/* Analiz textarea biraz daha belirgin */
+textarea{
+  background-color:#f3f4f6 !important;
+  color:var(--text) !important;
+}
+
+/* Placeholder yazıları */
+input::placeholder,
+textarea::placeholder{
+  color:#6b7280 !important;
+}
+
+/* Select option görünürlüğü */
+select option{
+  background:#ffffff;
+  color:var(--text);
 }
 
 /* Kurumsal buton */
@@ -123,16 +143,30 @@ th{
   font-weight:800 !important;
 }
 
+/* Logo + başlık hizası */
+.header{
+  display:flex !important;
+  align-items:center !important;
+  gap:16px !important;
+  justify-content:flex-start !important;
+}
+.logo{
+  height:54px;
+  width:auto;
+  display:block;
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="header">
-    <div>
-      <div class="title">Öğrenci Bazlı Haftalık Çalışma Programı <span class="pill">Altınküre v1</span></div>
-      <div class="sub">Excel çıktısı üretir (çoklu öğrenci → her öğrenci ayrı sayfa). Analiz verisini buraya yapıştır.</div>
-    </div>
+<div class="header">
+  <img src="logo.png" class="logo" alt="Okul Logosu">
+  <div>
+    <div class="title">Öğrenci Bazlı Haftalık Çalışma Programı <span class="pill">Altınküre v1</span></div>
+    <div class="sub">Excel çıktısı üretir (çoklu öğrenci → her öğrenci ayrı sayfa). Analiz verisini buraya yapıştır.</div>
   </div>
+</div>
 
   <div class="grid">
     <div class="card">
