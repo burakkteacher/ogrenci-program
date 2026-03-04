@@ -574,13 +574,13 @@ async function buildWorkbook(students, settings){
     h1.value = "ALTINKÜRE ORTAOKULU";
     h1.font = {name:"Calibri", size:16, bold:true, color:{argb:"FFFFFF"}};
     h1.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"0E2A47"}};
-    h1.alignment = {vertical:"middle", horizontal:"left"};
+    h1.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
     h1.border = thickBorder();
     ws.getRow(1).height = 28;
 
     // Row 2 split (prevents date clipping in merged cells)
     ws.mergeCells("A2","E2");
-    ws.mergeCells("F2","G2");
+    ws.mergeCells("F2","J2");
 
     const h2L = ws.getCell("A2");
     h2L.value = `${title} | ${mid}`;
@@ -593,7 +593,7 @@ async function buildWorkbook(students, settings){
     h2R.value = dateStr ? `Tarih: ${dateStr}` : "";
     h2R.font = {name:"Calibri", size:11, bold:true, color:{argb:"FFFFFF"}};
     h2R.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"0E2A47"}};
-    h2R.alignment = {vertical:"middle", horizontal:"right"};
+    h2R.alignment = {vertical:"middle", horizontal:"right", wrapText:true, shrinkToFit:true};
     h2R.border = thickBorder();
 
     ws.getRow(2).height = 24;
@@ -601,7 +601,7 @@ async function buildWorkbook(students, settings){
     // Place logo (if exists)
     if(logoId){
       ws.addImage(logoId, {
-        tl: { col: 5.75, row: 0.15 },
+        tl: { col: 7.6, row: 0.15 },
         ext: { width: 110, height: 40 }
       });
     }
