@@ -56,7 +56,74 @@
     .hint{ color:var(--muted); font-size:12px; line-height:1.45; margin-top:8px; }
     .pill{ display:inline-block; padding:2px 8px; border:1px solid var(--line); border-radius:999px; font-size:11px; color:var(--muted); }
     .footerNote{ margin-top:10px; color:var(--muted); font-size:12px; }
-  </style>
+  
+/* === ALTINKÜRE KURUMSAL TEMA + PUNTO (işleyişe dokunmaz) === */
+:root{
+  --bg:#f5f7fb;
+  --card:#ffffff;
+  --text:#111827;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+
+  /* kurumsal ana renk (isterseniz değeri değiştiririz) */
+  --accent:#1f4ed8;
+  --accent2:#0f2f7a;
+}
+
+/* Genel punto */
+html{ font-size:16px; }         /* istersen 17px yaparız */
+body{
+  background:var(--bg) !important;
+  color:var(--text) !important;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial !important;
+  font-size:1rem !important;     /* 16px */
+  line-height:1.45 !important;
+}
+
+/* Başlıklar */
+h1,.title{ font-size:1.6rem !important; font-weight:800 !important; }
+h2{ font-size:1.25rem !important; font-weight:700 !important; }
+.sub{ font-size:.95rem !important; color:var(--muted) !important; }
+
+/* Kart / kutular (varsa) */
+.card,.panel,.box,.container{
+  background:var(--card) !important;
+  border:1px solid var(--line) !important;
+  border-radius:12px !important;
+}
+
+/* Form elemanları */
+label{ font-size:.95rem !important; }
+select,input,textarea,button{
+  font-size:1rem !important;     /* 16px */
+  padding:10px 12px !important;
+  border-radius:10px !important;
+  border:1px solid var(--line) !important;
+}
+
+/* Kurumsal buton */
+button,.btn,.primary{
+  background:var(--accent) !important;
+  color:#fff !important;
+  border:none !important;
+  font-weight:700 !important;
+}
+button:hover,.btn:hover,.primary:hover{ opacity:.92 !important; }
+
+/* Tablo okunabilirliği (varsa) */
+table{ border-collapse:collapse !important; }
+th,td{
+  font-size:.98rem !important;
+  padding:10px 12px !important;
+  border-bottom:1px solid var(--line) !important;
+}
+th{
+  background:#eef2ff !important;
+  color:var(--accent2) !important;
+  font-weight:800 !important;
+}
+
+</style>
 </head>
 <body>
 <div class="wrap">
