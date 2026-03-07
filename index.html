@@ -239,6 +239,11 @@ th{
             <option value="1.2">Biraz artır (×1.2)</option>
           </select>
           <div class="hint">Soru önerileri otomatik üretilir; bu çarpanla genel artır/azalt yapabilirsin.</div>
+      <div style="margin-top:10px;">
+        <label>Öğretmen Notu</label>
+        <textarea id="teacherNote" placeholder="İsteğe bağlı öğretmen notu..."></textarea>
+      </div>
+
         </div>
       </div>
 
@@ -585,14 +590,14 @@ async function buildWorkbook(students, settings){
     const selectedBook = (settings.bookOfMonth || "").trim();
 
     ws.columns = [
-      { key:"gun", width: 14 },
-      { key:"d1", width: 25 },
+      { key:"gun", width: 16 },
+      { key:"d1", width: 30 },
       { key:"s1", width: 7 },
       { key:"c1", width: 4 },
-      { key:"d2", width: 25 },
+      { key:"d2", width: 30 },
       { key:"s2", width: 7 },
       { key:"c2", width: 4 },
-      { key:"d3", width: 25 },
+      { key:"d3", width: 30 },
       { key:"s3", width: 7 },
       { key:"c3", width: 4 },
       { key:"kitap", width: 16 },
@@ -798,6 +803,28 @@ ${konuText}` : (dersText || konuText || "");
     ws.views = [{ state: "frozen", xSplit: 0, ySplit: startRow }];
     ws.pageSetup.horizontalCentered = true;
     ws.pageSetup.verticalCentered = false;
+
+    // --- Not blokları ---
+    let lastRow = ws.lastRow.number + 2;
+    ws.getRow(lastRow).values = ["Öğrenci İmza:", "", "", "Veli İmza:"];
+    lastRow++;
+
+    const teacherNote = (document.getElementById("teacherNote")?.value || "").trim();
+
+    ws.mergeCells(`A${lastRow}:F${lastRow+3}`);
+    const veliCell = ws.getCell(`A${lastRow}`);
+    veliCell.value = "VELİ NOTU:";
+    veliCell.alignment = {vertical:"top",wrapText:true};
+
+    ws.mergeCells(`H${lastRow}:J${lastRow}`);
+    const ogHeader = ws.getCell(`H${lastRow}`);
+    ogHeader.value="ÖĞRETMEN NOTU";
+    ogHeader.alignment={horizontal:"center"};
+
+    ws.mergeCells(`H${lastRow+1}:J${lastRow+3}`);
+    const ogCell = ws.getCell(`H${lastRow+1}`);
+    ogCell.value = teacherNote;
+    ogCell.alignment={vertical:"top",wrapText:true};
   }
 
   return wb;
