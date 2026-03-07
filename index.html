@@ -637,33 +637,33 @@ async function buildWorkbook(students, settings){
       columns: [
         { key:"gun", width: 11 },
         { key:"d1", width: 21 },
-        { key:"s1", width: 5 },
-        { key:"c1", width: 2.5 },
-        { key:"d2", width: 21 },
-        { key:"s2", width: 5 },
-        { key:"c2", width: 2.5 },
-        { key:"kitap", width: 12 },
+        { key:"s1", width: 5.5 },
+        { key:"c1", width: 2.8 },
+        { key:"d2", width: 20.5 },
+        { key:"s2", width: 5.5 },
+        { key:"c2", width: 2.8 },
+        { key:"kitap", width: 13.5 },
       ],
       letters: { gun:"A", d1:"B", s1:"C", c1:"D", d2:"E", s2:"F", c2:"G", kitap:"H" },
       lastCol: "H",
       titleLeftEnd: "F",
       titleRightStart: "G",
-      sign: { student:["A","C"], parent:["D","F"], info:["G","H"] },
-      note: { teacher:["A","C"], parent:["D","F"], info:["G","H"] }
+      sign: { student:["A","C"], parent:["D","E"], info:["F","H"] },
+      note: { teacher:["A","C"], parent:["D","E"], info:["F","H"] }
     },
     3: {
       columns: [
         { key:"gun", width: 10 },
         { key:"d1", width: 18 },
-        { key:"s1", width: 4.5 },
-        { key:"c1", width: 2.3 },
-        { key:"d2", width: 18 },
-        { key:"s2", width: 4.5 },
-        { key:"c2", width: 2.3 },
-        { key:"d3", width: 18 },
-        { key:"s3", width: 4.5 },
-        { key:"c3", width: 2.3 },
-        { key:"kitap", width: 10 },
+        { key:"s1", width: 5.2 },
+        { key:"c1", width: 2.8 },
+        { key:"d2", width: 17.5 },
+        { key:"s2", width: 5.2 },
+        { key:"c2", width: 2.8 },
+        { key:"d3", width: 17.5 },
+        { key:"s3", width: 5.2 },
+        { key:"c3", width: 2.8 },
+        { key:"kitap", width: 11.5 },
       ],
       letters: { gun:"A", d1:"B", s1:"C", c1:"D", d2:"E", s2:"F", c2:"G", d3:"H", s3:"I", c3:"J", kitap:"K" },
       lastCol: "K",
@@ -707,19 +707,20 @@ async function buildWorkbook(students, settings){
     ws.mergeCells(`A2:${layout.titleLeftEnd}2`);
     ws.mergeCells(`${layout.titleRightStart}2:${layout.lastCol}2`);
     const h2L = ws.getCell("A2");
-    h2L.value = `${title} | ${mid}`;
-    h2L.font = {name:"Calibri", size:10, bold:true, color:{argb:"334155"}};
+    h2L.value = `${title}
+${mid}`;
+    h2L.font = {name:"Calibri", size:9, bold:true, color:{argb:"334155"}};
     h2L.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"F8FAFC"}};
     h2L.alignment = {vertical:"middle", horizontal:"left", wrapText:true, shrinkToFit:true};
     h2L.border = thickBorder();
 
     const h2R = ws.getCell(`${layout.titleRightStart}2`);
     h2R.value = dateStr ? `Tarih: ${dateStr}` : "";
-    h2R.font = {name:"Calibri", size:10, bold:true, color:{argb:"334155"}};
+    h2R.font = {name:"Calibri", size:9, bold:true, color:{argb:"334155"}};
     h2R.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"F8FAFC"}};
     h2R.alignment = {vertical:"middle", horizontal:"right", wrapText:true, shrinkToFit:true};
     h2R.border = thickBorder();
-    ws.getRow(2).height = 26;
+    ws.getRow(2).height = 36;
 
     if(logoId){
       ws.addImage(logoId, {
@@ -737,12 +738,12 @@ async function buildWorkbook(students, settings){
     for(const [col,val] of headers){
       const c = ws.getCell(`${col}${startRow}`);
       c.value = val;
-      c.font = font({bold:true, color:{argb:"FF111827"}, size:9});
+      c.font = font({bold:true, color:{argb:"FF111827"}, size:8.5});
       c.fill = fill("#DBEAFE");
       c.alignment = { vertical:"middle", horizontal:"center", wrapText:true, shrinkToFit:true };
       c.border = thickBorder();
     }
-    ws.getRow(startRow).height = 30;
+    ws.getRow(startRow).height = 42;
 
     const slotDefs = use3
       ? [
@@ -866,26 +867,26 @@ async function buildWorkbook(students, settings){
 
     const teacherCell = ws.getCell(`${notes.teacher[0]}${noteStart}`);
     teacherCell.value = teacherNote ? `ÖĞRETMEN NOTU\n\n${teacherNote}` : "ÖĞRETMEN NOTU";
-    teacherCell.font = font({bold:true, size:10});
+    teacherCell.font = font({bold:true, size:9});
     teacherCell.alignment = {vertical:"top", horizontal:"left", wrapText:true};
     teacherCell.fill = fill("#F8FAFC");
     teacherCell.border = thickBorder();
 
     const parentCell = ws.getCell(`${notes.parent[0]}${noteStart}`);
     parentCell.value = "VELİ NOTU";
-    parentCell.font = font({bold:true, size:10});
+    parentCell.font = font({bold:true, size:9});
     parentCell.alignment = {vertical:"top", horizontal:"left", wrapText:true};
     parentCell.fill = fill("#F8FAFC");
     parentCell.border = thickBorder();
 
     const infoCell = ws.getCell(`${notes.info[0]}${noteStart}`);
     infoCell.value = "SINAVZA NOTU\n\nBu plan, analiz verisindeki öncelikli konulara göre kişiye özel hazırlanmıştır.";
-    infoCell.font = font({bold:true, size:10});
+    infoCell.font = font({bold:true, size:8.5});
     infoCell.alignment = {vertical:"top", horizontal:"left", wrapText:true};
     infoCell.fill = fill("#EFF6FF");
     infoCell.border = thickBorder();
 
-    for(let rr = noteStart; rr <= noteEnd; rr++) ws.getRow(rr).height = 22;
+    for(let rr = noteStart; rr <= noteEnd; rr++) ws.getRow(rr).height = 24;
 
     ws.pageSetup = {
       orientation: "landscape",
@@ -961,5 +962,6 @@ document.getElementById("btnDownload").addEventListener("click", async () => {
 </script>
 </body>
 </html>
+
 
 
