@@ -262,6 +262,7 @@ th{
 const title = "Kişiye Özel Haftalık Çalışma Programı";
 /* -------------------- Defaults -------------------- */
 const DAYS = ["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
+let BOOKS = {};
 
 const GRADE_DEFAULTS = {
   5: { qNum: 5, qVer: 10 },
@@ -506,6 +507,16 @@ function formatDateTR(yyyy_mm_dd){
   return `${dd}.${mm}.${y}`;
 }
 
+async function loadBooks(){
+  try{
+    const res = await fetch("books.json", { cache:"no-store" });
+    if(!res.ok) throw new Error("books.json okunamadı");
+    BOOKS = await res.json();
+  }catch(e){
+    BOOKS = {};
+  }
+}
+
 /* -------------------- Excel generation -------------------- */
 function thickBorder(){
   return { top:{style:"thick"}, left:{style:"thick"}, bottom:{style:"thick"}, right:{style:"thick"} };
@@ -542,16 +553,17 @@ async function buildWorkbook(students, settings){
 
     // columns WITHOUT headers (prevents extra header row)
     const colDefs = [
-      { key:"gun", width: 14 },
-      { key:"d1", width: 34 },
-      { key:"s1", width: 7 },
-      { key:"c1", width: 4 },
-      { key:"d2", width: 34 },
-      { key:"s2", width: 7 },
-      { key:"c2", width: 4 },
-      { key:"d3", width: 34 },
-      { key:"s3", width: 7 },
-      { key:"c3", width: 4 },
+      { key:"gun", width: 12 },
+      { key:"d1", width: 24 },
+      { key:"s1", width: 6.5 },
+      { key:"c1", width: 4.2 },
+      { key:"d2", width: 24 },
+      { key:"s2", width: 6.5 },
+      { key:"c2", width: 4.2 },
+      { key:"d3", width: 24 },
+      { key:"s3", width: 6.5 },
+      { key:"c3", width: 4.2 },
+      { key:"book", width: 12 },
     ];
     ws.columns = colDefs;
 
@@ -567,9 +579,11 @@ async function buildWorkbook(students, settings){
       dateStr = formatDateTR(settings.dateManual);
     }
 
-    // Header block rows (1-2)
-    // Layout: A1..J2
-    ws.mergeCells("A1","G1");
+    const bookName = (BOOKS && (BOOKS[st.sube] || BOOKS[String(st.sube).trim()])) || "";
+
+    // Header block rows (1-3)
+    // Fixed merged ranges prevent clipping / shifting with or without date
+    ws.mergeCells("A1","H1");
     const h1 = ws.getCell("A1");
     h1.value = "ALTINKÜRE ORTAOKULU";
     h1.font = {name:"Calibri", size:16, bold:true, color:{argb:"1E3A8A"}};
@@ -578,9 +592,9 @@ async function buildWorkbook(students, settings){
     h1.border = thickBorder();
     ws.getRow(1).height = 28;
 
-    // Row 2 split (prevents date clipping in merged cells)
-    ws.mergeCells("A2","E2");
-    ws.mergeCells("F2","J2");
+    // Row 2 split (fixed widths; same layout for dated / undated export)
+    ws.mergeCells("A2","H2");
+    ws.mergeCells("I2","K2");
 
     const h2L = ws.getCell("A2");
     h2L.value = `${title} | ${mid}`;
@@ -589,7 +603,7 @@ async function buildWorkbook(students, settings){
     h2L.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
     h2L.border = thickBorder();
 
-    const h2R = ws.getCell("F2");
+    const h2R = ws.getCell("I2");
     h2R.value = dateStr ? `Tarih: ${dateStr}` : "";
     h2R.font = {name:"Calibri", size:11, bold:true, color:{argb:"334155"}};
     h2R.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"F8FAFC"}};
@@ -598,16 +612,25 @@ async function buildWorkbook(students, settings){
 
     ws.getRow(2).height = 24;
 
+    ws.mergeCells("A3","K3");
+    const h3 = ws.getCell("A3");
+    h3.value = bookName ? `AYIN KİTABI: ${bookName}` : "AYIN KİTABI:";
+    h3.font = {name:"Calibri", size:11, bold:true, color:{argb:"334155"}};
+    h3.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"F8FAFC"}};
+    h3.alignment = {vertical:"middle", horizontal:"left", wrapText:true, shrinkToFit:true};
+    h3.border = thickBorder();
+    ws.getRow(3).height = 22;
+
     // Place logo (if exists)
     if(logoId){
       ws.addImage(logoId, {
-        tl: { col: 7.6, row: 0.15 },
+        tl: { col: 8.05, row: 0.15 },
         ext: { width: 110, height: 40 }
       });
     }
 
-    // Table header at row 4
-    const startRow = 4;
+    // Table header at row 5
+    const startRow = 5;
     const headerRow = ws.getRow(startRow);
 
     // Determine whether 3rd lesson is used for this student
@@ -617,6 +640,7 @@ async function buildWorkbook(students, settings){
     ws.getColumn(8).hidden = !use3;
     ws.getColumn(9).hidden = !use3;
     ws.getColumn(10).hidden = !use3;
+    ws.getColumn(11).hidden = false;
 
     // Header labels
     const headers = [
@@ -630,6 +654,7 @@ async function buildWorkbook(students, settings){
       {cell:"H", val:"3. Ders (ops.)"},
       {cell:"I", val:"Soru"},
       {cell:"J", val:"☐"},
+      {cell:"K", val:"Kitap Okuma (Sayfa)"},
     ];
     for(const h of headers){
       const c = ws.getCell(`${h.cell}${startRow}`);
@@ -649,7 +674,7 @@ async function buildWorkbook(students, settings){
 
     for(let i=0;i<7;i++){
       const r = ws.getRow(baseRow+i);
-      r.height = 44;
+      r.height = 50;
 
       // Day cell (A)
       const dayCell = ws.getCell(`A${baseRow+i}`);
@@ -703,12 +728,17 @@ async function buildWorkbook(students, settings){
         if(hidden){
           dCell.value = null; sCell.value = null; cCell.value = null;
         }
-      }
+      const bookCell = ws.getCell(`K${baseRow+i}`);
+      bookCell.value = "";
+      bookCell.font = font({bold:true});
+      bookCell.alignment = center();
+      bookCell.fill = fill("#F8FAFC");
+      bookCell.border = thickBorder();
     }
 
     // Warning row (bold) at baseRow+7+1
     const warnRowIdx = baseRow + 7 + 1;
-    ws.mergeCells(`B${warnRowIdx}`, `J${warnRowIdx}`);
+    ws.mergeCells(`B${warnRowIdx}`, `K${warnRowIdx}`);
     const warnLabel = ws.getCell(`A${warnRowIdx}`);
     warnLabel.value = "Uyarı:";
     warnLabel.font = font({bold:true, italic:true, color:{argb:"FFB91C1C"}});
@@ -721,7 +751,9 @@ async function buildWorkbook(students, settings){
     warnCell.fill = fill("#FFE7E7");
     warnCell.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
     warnCell.border = thickBorder();
-    ws.getRow(warnRowIdx).he    // Signature row
+    ws.getRow(warnRowIdx).height = 34;
+
+    // Signature row
     const signRow = warnRowIdx + 2;
 
     // Two signature boxes (always visible)
@@ -740,7 +772,7 @@ async function buildWorkbook(students, settings){
 
     // Optional third signature box (only when 3. ders is used)
     if (use3){
-      ws.mergeCells(`H${signRow}`, `J${signRow}`);
+      ws.mergeCells(`H${signRow}`, `K${signRow}`);
       const s3 = ws.getCell(`H${signRow}`);
       s3.value = " ";
       s3.border = thickBorder();
@@ -751,7 +783,7 @@ async function buildWorkbook(students, settings){
     // Premium note box (always created)
     // 2 ders: E-G altında sağda | 3 ders: H-J altında sağda
     const noteStartCol = use3 ? "H" : "E";
-    const noteEndCol   = use3 ? "J" : "G";
+    const noteEndCol   = "K";
     const noteTop = signRow + 1;
     const noteMid = signRow + 2;
     const noteBottom = signRow + 3;
@@ -784,7 +816,10 @@ async function buildWorkbook(students, settings){
       fitToPage: true,
       fitToWidth: 1,
       fitToHeight: 0,
-      margins: { left:0.3, right:0.3, top:0.4, bottom:0.4, header:0.2, footer:0.2 }
+      horizontalCentered: true,
+      verticalCentered: false,
+      paperSize: 9,
+      margins: { left:0.25, right:0.25, top:0.35, bottom:0.35, header:0.2, footer:0.2 }
     };
 
     // Freeze panes below header row
@@ -828,6 +863,7 @@ document.getElementById("btnDownload").addEventListener("click", async () => {
       qScale: elQScale.value,
     };
 
+    await loadBooks();
     const wb = await buildWorkbook(students, settings);
     const buf = await wb.xlsx.writeBuffer();
 
