@@ -224,14 +224,32 @@ th{
       <div style="margin-top:10px;">
         <label>Ders Bazlı Soru Sayıları</label>
         <div class="row3">
-          <input id="qMat" type="number" min="0" step="1" placeholder="Matematik" />
-          <input id="qFen" type="number" min="0" step="1" placeholder="Fen" />
-          <input id="qTurkce" type="number" min="0" step="1" placeholder="Türkçe" />
+          <div>
+            <label style="font-size:13px;margin-bottom:4px;">Matematik</label>
+            <input id="qMat" type="number" min="0" step="1" placeholder="Matematik" />
+          </div>
+          <div>
+            <label style="font-size:13px;margin-bottom:4px;">Fen</label>
+            <input id="qFen" type="number" min="0" step="1" placeholder="Fen" />
+          </div>
+          <div>
+            <label style="font-size:13px;margin-bottom:4px;">Türkçe</label>
+            <input id="qTurkce" type="number" min="0" step="1" placeholder="Türkçe" />
+          </div>
         </div>
         <div class="row3" style="margin-top:10px;">
-          <input id="qSosyal" type="number" min="0" step="1" placeholder="Sosyal / İnkılap" />
-          <input id="qIng" type="number" min="0" step="1" placeholder="İngilizce" />
-          <input id="qDin" type="number" min="0" step="1" placeholder="Din" />
+          <div>
+            <label style="font-size:13px;margin-bottom:4px;">Sosyal / İnkılap</label>
+            <input id="qSosyal" type="number" min="0" step="1" placeholder="Sosyal / İnkılap" />
+          </div>
+          <div>
+            <label style="font-size:13px;margin-bottom:4px;">İngilizce</label>
+            <input id="qIng" type="number" min="0" step="1" placeholder="İngilizce" />
+          </div>
+          <div>
+            <label style="font-size:13px;margin-bottom:4px;">Din</label>
+            <input id="qDin" type="number" min="0" step="1" placeholder="Din" />
+          </div>
         </div>
         <div class="hint">Analizde hangi ders gelirse, burada yazdığın ders bazlı soru sayısı otomatik kullanılır.</div>
       </div>
@@ -617,35 +635,35 @@ async function buildWorkbook(students, settings){
   const layouts = {
     2: {
       columns: [
-        { key:"gun", width: 13 },
-        { key:"d1", width: 25 },
-        { key:"s1", width: 6 },
-        { key:"c1", width: 3 },
-        { key:"d2", width: 25 },
-        { key:"s2", width: 6 },
-        { key:"c2", width: 3 },
-        { key:"kitap", width: 13 },
+        { key:"gun", width: 11 },
+        { key:"d1", width: 21 },
+        { key:"s1", width: 5 },
+        { key:"c1", width: 2.5 },
+        { key:"d2", width: 21 },
+        { key:"s2", width: 5 },
+        { key:"c2", width: 2.5 },
+        { key:"kitap", width: 12 },
       ],
       letters: { gun:"A", d1:"B", s1:"C", c1:"D", d2:"E", s2:"F", c2:"G", kitap:"H" },
       lastCol: "H",
-      titleLeftEnd: "E",
-      titleRightStart: "F",
+      titleLeftEnd: "F",
+      titleRightStart: "G",
       sign: { student:["A","C"], parent:["D","F"], info:["G","H"] },
       note: { teacher:["A","C"], parent:["D","F"], info:["G","H"] }
     },
     3: {
       columns: [
-        { key:"gun", width: 12 },
-        { key:"d1", width: 22 },
-        { key:"s1", width: 5.5 },
-        { key:"c1", width: 3 },
-        { key:"d2", width: 22 },
-        { key:"s2", width: 5.5 },
-        { key:"c2", width: 3 },
-        { key:"d3", width: 22 },
-        { key:"s3", width: 5.5 },
-        { key:"c3", width: 3 },
-        { key:"kitap", width: 13 },
+        { key:"gun", width: 10 },
+        { key:"d1", width: 18 },
+        { key:"s1", width: 4.5 },
+        { key:"c1", width: 2.3 },
+        { key:"d2", width: 18 },
+        { key:"s2", width: 4.5 },
+        { key:"c2", width: 2.3 },
+        { key:"d3", width: 18 },
+        { key:"s3", width: 4.5 },
+        { key:"c3", width: 2.3 },
+        { key:"kitap", width: 10 },
       ],
       letters: { gun:"A", d1:"B", s1:"C", c1:"D", d2:"E", s2:"F", c2:"G", d3:"H", s3:"I", c3:"J", kitap:"K" },
       lastCol: "K",
@@ -690,18 +708,18 @@ async function buildWorkbook(students, settings){
     ws.mergeCells(`${layout.titleRightStart}2:${layout.lastCol}2`);
     const h2L = ws.getCell("A2");
     h2L.value = `${title} | ${mid}`;
-    h2L.font = {name:"Calibri", size:11, bold:true, color:{argb:"334155"}};
+    h2L.font = {name:"Calibri", size:10, bold:true, color:{argb:"334155"}};
     h2L.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"F8FAFC"}};
-    h2L.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
+    h2L.alignment = {vertical:"middle", horizontal:"left", wrapText:true, shrinkToFit:true};
     h2L.border = thickBorder();
 
     const h2R = ws.getCell(`${layout.titleRightStart}2`);
     h2R.value = dateStr ? `Tarih: ${dateStr}` : "";
-    h2R.font = {name:"Calibri", size:11, bold:true, color:{argb:"334155"}};
+    h2R.font = {name:"Calibri", size:10, bold:true, color:{argb:"334155"}};
     h2R.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"F8FAFC"}};
-    h2R.alignment = {vertical:"middle", horizontal:"right", wrapText:true};
+    h2R.alignment = {vertical:"middle", horizontal:"right", wrapText:true, shrinkToFit:true};
     h2R.border = thickBorder();
-    ws.getRow(2).height = 22;
+    ws.getRow(2).height = 26;
 
     if(logoId){
       ws.addImage(logoId, {
@@ -712,19 +730,19 @@ async function buildWorkbook(students, settings){
 
     const startRow = 4;
     const headers = use3 ? [
-      ["A","Gün"],["B","1. Ders"],["C","Soru"],["D","☐"],["E","2. Ders"],["F","Soru"],["G","☐"],["H","3. Ders"],["I","Soru"],["J","☐"],["K","Kitap Okuma\n(Sayfa)"]
+      ["A","Gün"],["B","1. Ders"],["C","Soru"],["D","☐"],["E","2. Ders"],["F","Soru"],["G","☐"],["H","3. Ders"],["I","Soru"],["J","☐"],["K","Kitap Okuma\nSayfa"]
     ] : [
-      ["A","Gün"],["B","1. Ders"],["C","Soru"],["D","☐"],["E","2. Ders"],["F","Soru"],["G","☐"],["H","Kitap Okuma\n(Sayfa)"]
+      ["A","Gün"],["B","1. Ders"],["C","Soru"],["D","☐"],["E","2. Ders"],["F","Soru"],["G","☐"],["H","Kitap Okuma\nSayfa"]
     ];
     for(const [col,val] of headers){
       const c = ws.getCell(`${col}${startRow}`);
       c.value = val;
-      c.font = font({bold:true, color:{argb:"FF111827"}});
+      c.font = font({bold:true, color:{argb:"FF111827"}, size:9});
       c.fill = fill("#DBEAFE");
-      c.alignment = center();
+      c.alignment = { vertical:"middle", horizontal:"center", wrapText:true, shrinkToFit:true };
       c.border = thickBorder();
     }
-    ws.getRow(startRow).height = 24;
+    ws.getRow(startRow).height = 30;
 
     const slotDefs = use3
       ? [
@@ -740,7 +758,7 @@ async function buildWorkbook(students, settings){
     const baseRow = startRow + 1;
     for(let i=0;i<7;i++){
       const rowNumber = baseRow + i;
-      ws.getRow(rowNumber).height = 44;
+      ws.getRow(rowNumber).height = 46;
 
       const dayCell = ws.getCell(`A${rowNumber}`);
       dayCell.value = DAYS[i];
@@ -756,7 +774,7 @@ async function buildWorkbook(students, settings){
 
         const dCell = ws.getCell(`${sl.d}${rowNumber}`);
         dCell.value = hasData ? `${meta.emoji} ${meta.code} • ${t.ders}\n${t.konu}` : "";
-        dCell.font = font({bold:true, size:10});
+        dCell.font = font({bold:true, size:9});
         dCell.alignment = leftWrap();
         dCell.fill = fill("#"+meta.fill);
         dCell.border = thickBorder();
@@ -847,22 +865,22 @@ async function buildWorkbook(students, settings){
     ws.mergeCells(`${notes.info[0]}${noteStart}:${notes.info[1]}${noteEnd}`);
 
     const teacherCell = ws.getCell(`${notes.teacher[0]}${noteStart}`);
-    teacherCell.value = teacherNote ? `ÖĞRETMEN NOTU\n${teacherNote}` : "ÖĞRETMEN NOTU";
-    teacherCell.font = font({bold:true});
+    teacherCell.value = teacherNote ? `ÖĞRETMEN NOTU\n\n${teacherNote}` : "ÖĞRETMEN NOTU";
+    teacherCell.font = font({bold:true, size:10});
     teacherCell.alignment = {vertical:"top", horizontal:"left", wrapText:true};
     teacherCell.fill = fill("#F8FAFC");
     teacherCell.border = thickBorder();
 
     const parentCell = ws.getCell(`${notes.parent[0]}${noteStart}`);
     parentCell.value = "VELİ NOTU";
-    parentCell.font = font({bold:true});
+    parentCell.font = font({bold:true, size:10});
     parentCell.alignment = {vertical:"top", horizontal:"left", wrapText:true};
     parentCell.fill = fill("#F8FAFC");
     parentCell.border = thickBorder();
 
     const infoCell = ws.getCell(`${notes.info[0]}${noteStart}`);
-    infoCell.value = "SINAVZA NOTU\nBu plan, analiz verisindeki öncelikli konulara göre kişiye özel hazırlanmıştır.";
-    infoCell.font = font({bold:true});
+    infoCell.value = "SINAVZA NOTU\n\nBu plan, analiz verisindeki öncelikli konulara göre kişiye özel hazırlanmıştır.";
+    infoCell.font = font({bold:true, size:10});
     infoCell.alignment = {vertical:"top", horizontal:"left", wrapText:true};
     infoCell.fill = fill("#EFF6FF");
     infoCell.border = thickBorder();
