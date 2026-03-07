@@ -215,6 +215,12 @@ th{
         </div>
       </div>
 
+      <div style="margin-top:10px;">
+        <label>Ayın Kitabı (sınıfa göre)</label>
+        <select id="bookMonth"></select>
+        <div class="hint">books.json içinden sınıf seviyesine göre listelenir. Seçilen kitap Excel çıktısında görünür.</div>
+      </div>
+
       <div class="row" style="margin-top:10px;">
         <div>
           <label>Soru Sayısı (Sayısal / Sözel)</label>
@@ -262,7 +268,6 @@ th{
 const title = "Kişiye Özel Haftalık Çalışma Programı";
 /* -------------------- Defaults -------------------- */
 const DAYS = ["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
-let BOOKS = {};
 
 const GRADE_DEFAULTS = {
   5: { qNum: 5, qVer: 10 },
@@ -307,6 +312,8 @@ const elQNum = document.getElementById("qNum");
 const elQVer = document.getElementById("qVer");
 const elQScale = document.getElementById("qScale");
 const elInput = document.getElementById("input");
+const elBookMonth = document.getElementById("bookMonth");
+let BOOKS = null;
 
 function applyGradeDefaults(){
   const g = Number(elGrade.value);
@@ -315,7 +322,27 @@ function applyGradeDefaults(){
 }
 applyGradeDefaults();
 
-elGrade.addEventListener("change", () => applyGradeDefaults());
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function fillBookMonth(){
+  if(!elBookMonth) return;
+  const grade = String(elGrade.value || "");
+  const arr = (BOOKS && (BOOKS[grade] || BOOKS[Number(grade)])) ? (BOOKS[grade] || BOOKS[Number(grade)]) : [];
+  const current = elBookMonth.value || "";
+  if((!arr || !arr.length) && !BOOKS){
+    elBookMonth.innerHTML = `<option value="">(books.json bulunamadı)</option>`;
+    return;
+  }
+  elBookMonth.innerHTML = `<option value="">Seçiniz...</option>` + (arr || []).map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join("");
+  if(current && (arr || []).includes(current)) elBookMonth.value = current;
+}
+
+elGrade.addEventListener("change", () => {
+  applyGradeDefaults();
+  fillBookMonth();
+});
 
 elDateMode.addEventListener("change", () => {
   elDateManual.disabled = (elDateMode.value !== "manual");
@@ -332,6 +359,22 @@ document.getElementById("btnDemo").addEventListener("click", () => {
 5-A\t1021\tNisanur İskender\tFen Bilimleri\tGökyüzündeki Komşumuz: Ay\t4
 `;
 });
+
+async function loadBooks(){
+  const bookPaths = ["books.json","./books.json","books (1).json","./books (1).json"];
+  for(const p of bookPaths){
+    try{
+      const r = await fetch(p, {cache:"no-store"});
+      if(!r.ok) continue;
+      BOOKS = await r.json();
+      fillBookMonth();
+      return;
+    }catch(e){}
+  }
+  BOOKS = null;
+  fillBookMonth();
+}
+loadBooks();
 
 /* -------------------- Parsing -------------------- */
 function parseTSV(tsv){
@@ -507,16 +550,6 @@ function formatDateTR(yyyy_mm_dd){
   return `${dd}.${mm}.${y}`;
 }
 
-async function loadBooks(){
-  try{
-    const res = await fetch("books.json", { cache:"no-store" });
-    if(!res.ok) throw new Error("books.json okunamadı");
-    BOOKS = await res.json();
-  }catch(e){
-    BOOKS = {};
-  }
-}
-
 /* -------------------- Excel generation -------------------- */
 function thickBorder(){
   return { top:{style:"thick"}, left:{style:"thick"}, bottom:{style:"thick"}, right:{style:"thick"} };
@@ -538,7 +571,6 @@ async function buildWorkbook(students, settings){
   wb.creator = "SINAVZA";
   wb.created = new Date();
 
-  // Try logo if exists in repo root (logo.png)
   let logoId = null;
   try{
     const b64 = await fetchImageAsBase64("logo.png");
@@ -550,24 +582,22 @@ async function buildWorkbook(students, settings){
   for(const st of students){
     const ws = wb.addWorksheet(`${st.numara}-${st.adi}`.slice(0,31));
     const mid = `${st.sube} • No: ${st.numara} • ${st.adi}`;
+    const selectedBook = (settings.bookOfMonth || "").trim();
 
-    // columns WITHOUT headers (prevents extra header row)
-    const colDefs = [
-      { key:"gun", width: 12 },
-      { key:"d1", width: 24 },
-      { key:"s1", width: 6.5 },
-      { key:"c1", width: 4.2 },
-      { key:"d2", width: 24 },
-      { key:"s2", width: 6.5 },
-      { key:"c2", width: 4.2 },
-      { key:"d3", width: 24 },
-      { key:"s3", width: 6.5 },
-      { key:"c3", width: 4.2 },
-      { key:"book", width: 12 },
+    ws.columns = [
+      { key:"gun", width: 14 },
+      { key:"d1", width: 25 },
+      { key:"s1", width: 7 },
+      { key:"c1", width: 4 },
+      { key:"d2", width: 25 },
+      { key:"s2", width: 7 },
+      { key:"c2", width: 4 },
+      { key:"d3", width: 25 },
+      { key:"s3", width: 7 },
+      { key:"c3", width: 4 },
+      { key:"kitap", width: 16 },
     ];
-    ws.columns = colDefs;
 
-    // Decide date string
     let dateStr = "";
     if(settings.dateMode === "today"){
       const now = new Date();
@@ -579,10 +609,9 @@ async function buildWorkbook(students, settings){
       dateStr = formatDateTR(settings.dateManual);
     }
 
-    const bookName = (BOOKS && (BOOKS[st.sube] || BOOKS[String(st.sube).trim()])) || "";
+    const {plan, use3} = buildPlan(st.items, settings.grade, settings.thirdMode);
+    const lastCol = use3 ? "K" : "K";
 
-    // Header block rows (1-3)
-    // Fixed merged ranges prevent clipping / shifting with or without date
     ws.mergeCells("A1","H1");
     const h1 = ws.getCell("A1");
     h1.value = "ALTINKÜRE ORTAOKULU";
@@ -592,10 +621,8 @@ async function buildWorkbook(students, settings){
     h1.border = thickBorder();
     ws.getRow(1).height = 28;
 
-    // Row 2 split (fixed widths; same layout for dated / undated export)
-    ws.mergeCells("A2","H2");
-    ws.mergeCells("I2","K2");
-
+    ws.mergeCells("A2","G2");
+    ws.mergeCells("H2","K2");
     const h2L = ws.getCell("A2");
     h2L.value = `${title} | ${mid}`;
     h2L.font = {name:"Calibri", size:11, bold:true, color:{argb:"334155"}};
@@ -603,46 +630,26 @@ async function buildWorkbook(students, settings){
     h2L.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
     h2L.border = thickBorder();
 
-    const h2R = ws.getCell("I2");
+    const h2R = ws.getCell("H2");
     h2R.value = dateStr ? `Tarih: ${dateStr}` : "";
     h2R.font = {name:"Calibri", size:11, bold:true, color:{argb:"334155"}};
     h2R.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"F8FAFC"}};
     h2R.alignment = {vertical:"middle", horizontal:"right", wrapText:true, shrinkToFit:true};
     h2R.border = thickBorder();
-
     ws.getRow(2).height = 24;
 
-    ws.mergeCells("A3","K3");
-    const h3 = ws.getCell("A3");
-    h3.value = bookName ? `AYIN KİTABI: ${bookName}` : "AYIN KİTABI:";
-    h3.font = {name:"Calibri", size:11, bold:true, color:{argb:"334155"}};
-    h3.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"F8FAFC"}};
-    h3.alignment = {vertical:"middle", horizontal:"left", wrapText:true, shrinkToFit:true};
-    h3.border = thickBorder();
-    ws.getRow(3).height = 22;
-
-    // Place logo (if exists)
     if(logoId){
       ws.addImage(logoId, {
-        tl: { col: 8.05, row: 0.15 },
-        ext: { width: 110, height: 40 }
+        tl: { col: 8.1, row: 0.15 },
+        ext: { width: 105, height: 38 }
       });
     }
 
-    // Table header at row 5
-    const startRow = 5;
-    const headerRow = ws.getRow(startRow);
-
-    // Determine whether 3rd lesson is used for this student
-    const {plan, use3} = buildPlan(st.items, settings.grade, settings.thirdMode);
-
-    // Hide 3rd lesson columns if not used
+    const startRow = 4;
     ws.getColumn(8).hidden = !use3;
     ws.getColumn(9).hidden = !use3;
     ws.getColumn(10).hidden = !use3;
-    ws.getColumn(11).hidden = false;
 
-    // Header labels
     const headers = [
       {cell:"A", val:"Gün"},
       {cell:"B", val:"1. Ders"},
@@ -651,7 +658,7 @@ async function buildWorkbook(students, settings){
       {cell:"E", val:"2. Ders"},
       {cell:"F", val:"Soru"},
       {cell:"G", val:"☐"},
-      {cell:"H", val:"3. Ders (ops.)"},
+      {cell:"H", val:"3. Ders"},
       {cell:"I", val:"Soru"},
       {cell:"J", val:"☐"},
       {cell:"K", val:"Kitap Okuma (Sayfa)"},
@@ -664,9 +671,8 @@ async function buildWorkbook(students, settings){
       c.alignment = center();
       c.border = thickBorder();
     }
-    headerRow.height = 24;
+    ws.getRow(startRow).height = 26;
 
-    // Table rows (days) start at row 5
     const baseRow = startRow + 1;
     const qNum = Math.max(0, Number(settings.qNum)||0);
     const qVer = Math.max(0, Number(settings.qVer)||0);
@@ -674,9 +680,8 @@ async function buildWorkbook(students, settings){
 
     for(let i=0;i<7;i++){
       const r = ws.getRow(baseRow+i);
-      r.height = 50;
+      r.height = 46;
 
-      // Day cell (A)
       const dayCell = ws.getCell(`A${baseRow+i}`);
       dayCell.value = DAYS[i];
       dayCell.font = font({bold:true, color:{argb:"FF111827"}});
@@ -693,137 +698,106 @@ async function buildWorkbook(students, settings){
       for(let s=0; s<slots.length; s++){
         const sl = slots[s];
         const hidden = (s===2 && !use3);
-
         const t = sl.topic || {ders:"", konu:"", prio:999};
         const meta = subjectMeta(t.ders);
         const dersText = t.ders ? `${meta.emoji} ${meta.code} • ${t.ders}`.trim() : "";
         const konuText = t.konu ? `${t.konu}` : "";
-        const full = (dersText && konuText) ? `${dersText}\n${konuText}` : (dersText || konuText || "");
+        const full = (dersText && konuText) ? `${dersText}
+${konuText}` : (dersText || konuText || "");
 
-        // Lesson cell
         const dCell = ws.getCell(`${sl.colD}${baseRow+i}`);
-        dCell.value = full;
-        dCell.font = font({bold:true});
+        dCell.value = hidden ? null : full;
+        dCell.font = font({bold:true, size:10});
         dCell.alignment = leftWrap();
         dCell.fill = fill("#"+meta.fill);
         dCell.border = thickBorder();
 
-        // Question cell
         const sCell = ws.getCell(`${sl.colS}${baseRow+i}`);
         const numeric = isNumericSubject(t.ders);
         const baseQ = numeric ? qNum : qVer;
-        const qVal = Math.max(0, Math.round(baseQ * scale));
-        sCell.value = qVal;
+        const qVal = t.ders ? Math.max(0, Math.round(baseQ * scale)) : "";
+        sCell.value = hidden ? null : qVal;
         sCell.alignment = center();
         sCell.fill = fill("#FFF7CC");
         sCell.border = thickBorder();
         sCell.font = font({bold:true});
 
-        // Checkbox cell
         const cCell = ws.getCell(`${sl.colC}${baseRow+i}`);
-        cCell.value = ""; // empty
+        cCell.value = hidden ? null : "";
         cCell.alignment = center();
         cCell.border = thickBorder();
+      }
 
-        if(hidden){
-          dCell.value = null; sCell.value = null; cCell.value = null;
-        }
       const bookCell = ws.getCell(`K${baseRow+i}`);
       bookCell.value = "";
-      bookCell.font = font({bold:true});
       bookCell.alignment = center();
-      bookCell.fill = fill("#F8FAFC");
+      bookCell.fill = fill("#EAF7EA");
       bookCell.border = thickBorder();
+      bookCell.font = font({bold:false});
     }
 
-    // Warning row (bold) at baseRow+7+1
-    const warnRowIdx = baseRow + 7 + 1;
-    ws.mergeCells(`B${warnRowIdx}`, `K${warnRowIdx}`);
-    const warnLabel = ws.getCell(`A${warnRowIdx}`);
-    warnLabel.value = "Uyarı:";
-    warnLabel.font = font({bold:true, italic:true, color:{argb:"FFB91C1C"}});
-    warnLabel.alignment = {vertical:"middle", horizontal:"left"};
-    warnLabel.border = thickBorder();
+    const warnRowIdx = baseRow + 8;
+    ws.getRow(warnRowIdx).height = 34;
+    ws.getCell(`A${warnRowIdx}`).value = "Uyarı:";
+    ws.getCell(`A${warnRowIdx}`).font = font({bold:true, italic:true, color:{argb:"FFB91C1C"}});
+    ws.getCell(`A${warnRowIdx}`).alignment = {vertical:"middle", horizontal:"left"};
+    ws.getCell(`A${warnRowIdx}`).border = thickBorder();
 
+    ws.mergeCells(`B${warnRowIdx}`, `K${warnRowIdx}`);
     const warnCell = ws.getCell(`B${warnRowIdx}`);
-    warnCell.value = "⚠️ Ödevleri aksatmayacak şekilde, sınav analizlerinde eksik olan bu konulara çalışıyorsun. Soru çözerek konuları pekiştiriyorsun.";
+    warnCell.value = "Ödevleri aksatmayacak şekilde, sınav analizlerinde eksik olan bu konulara çalışıyorsun. Soru çözerek konuları pekiştiriyorsun.";
     warnCell.font = font({bold:true, color:{argb:"FF7A1F1F"}});
     warnCell.fill = fill("#FFE7E7");
     warnCell.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
     warnCell.border = thickBorder();
-    ws.getRow(warnRowIdx).height = 34;
 
-    // Signature row
-    const signRow = warnRowIdx + 2;
+    const bookRow = warnRowIdx + 1;
+    if(selectedBook){
+      ws.mergeCells(`A${bookRow}`, `K${bookRow}`);
+      const bk = ws.getCell(`A${bookRow}`);
+      bk.value = `AYIN KİTABI: ${selectedBook}`;
+      bk.font = font({bold:true, size:12, color:{argb:"FF111827"}});
+      bk.fill = fill("#EEFCEB");
+      bk.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
+      bk.border = thickBorder();
+      ws.getRow(bookRow).height = 24;
+    }
 
-    // Two signature boxes (always visible)
+    const signRow = selectedBook ? (bookRow + 1) : (warnRowIdx + 2);
     ws.mergeCells(`A${signRow}`, `D${signRow}`);
     ws.mergeCells(`E${signRow}`, `G${signRow}`);
-
     const s1 = ws.getCell(`A${signRow}`);
     s1.value = "Öğrenci İmza:";
     s1.font = font({ bold: true });
     s1.border = thickBorder();
-
     const s2 = ws.getCell(`E${signRow}`);
     s2.value = "Veli İmza:";
     s2.font = font({ bold: true });
     s2.border = thickBorder();
-
-    // Optional third signature box (only when 3. ders is used)
     if (use3){
       ws.mergeCells(`H${signRow}`, `K${signRow}`);
       const s3 = ws.getCell(`H${signRow}`);
       s3.value = " ";
       s3.border = thickBorder();
+    } else {
+      ws.mergeCells(`H${signRow}`, `K${signRow}`);
+      const s3 = ws.getCell(`H${signRow}`);
+      s3.value = " ";
+      s3.border = thickBorder();
     }
-
     ws.getRow(signRow).height = 24;
 
-    // Premium note box (always created)
-    // 2 ders: E-G altında sağda | 3 ders: H-J altında sağda
-    const noteStartCol = use3 ? "H" : "E";
-    const noteEndCol   = "K";
-    const noteTop = signRow + 1;
-    const noteMid = signRow + 2;
-    const noteBottom = signRow + 3;
-
-    ws.mergeCells(`${noteStartCol}${noteTop}`, `${noteEndCol}${noteTop}`);
-    ws.mergeCells(`${noteStartCol}${noteMid}`, `${noteEndCol}${noteBottom}`);
-
-    const noteTitle = ws.getCell(`${noteStartCol}${noteTop}`);
-    noteTitle.value = "NOT";
-    noteTitle.alignment = { vertical:"middle", horizontal:"center" };
-    noteTitle.font = font({ bold:true, color:{argb:"FF111827"} });
-    noteTitle.fill = fill("#BFDBFE");
-    noteTitle.border = thickBorder();
-
-    const noteMsg = ws.getCell(`${noteStartCol}${noteMid}`);
-    noteMsg.value = "SINAVZA tarafından yapılan analizle, öncelikli konu listesine göre kişiye özel hazırlanmıştır.";
-    noteMsg.alignment = { vertical:"top", horizontal:"left", wrapText:true };
-    noteMsg.fill = fill("#F6F7FB");
-    noteMsg.border = thickBorder();
-    noteMsg.font = font({ size:10 });
-
-    ws.getRow(noteTop).height = 20;
-    ws.getRow(noteMid).height = 46;
-    ws.getRow(noteBottom).height = 10;
-
-
-    // Print setup
     ws.pageSetup = {
       orientation: "landscape",
       fitToPage: true,
       fitToWidth: 1,
       fitToHeight: 0,
-      horizontalCentered: true,
-      verticalCentered: false,
       paperSize: 9,
       margins: { left:0.25, right:0.25, top:0.35, bottom:0.35, header:0.2, footer:0.2 }
     };
-
-    // Freeze panes below header row
     ws.views = [{ state: "frozen", xSplit: 0, ySplit: startRow }];
+    ws.pageSetup.horizontalCentered = true;
+    ws.pageSetup.verticalCentered = false;
   }
 
   return wb;
@@ -861,9 +835,9 @@ document.getElementById("btnDownload").addEventListener("click", async () => {
       qNum: elQNum.value,
       qVer: elQVer.value,
       qScale: elQScale.value,
+      bookOfMonth: elBookMonth ? elBookMonth.value : "",
     };
 
-    await loadBooks();
     const wb = await buildWorkbook(students, settings);
     const buf = await wb.xlsx.writeBuffer();
 
@@ -882,4 +856,5 @@ document.getElementById("btnDownload").addEventListener("click", async () => {
 </script>
 </body>
 </html>
+
 
