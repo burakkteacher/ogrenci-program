@@ -259,7 +259,7 @@ th{
 </div>
 
 <script>
-const title = "Öğrenci Bazlı Haftalık Çalışma Programı";
+const title = "Kişiye Özel Haftalık Çalışma Programı";
 /* -------------------- Defaults -------------------- */
 const DAYS = ["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
 
@@ -572,8 +572,8 @@ async function buildWorkbook(students, settings){
     ws.mergeCells("A1","G1");
     const h1 = ws.getCell("A1");
     h1.value = "ALTINKÜRE ORTAOKULU";
-    h1.font = {name:"Calibri", size:16, bold:true, color:{argb:"FFFFFF"}};
-    h1.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"0E2A47"}};
+    h1.font = {name:"Calibri", size:16, bold:true, color:{argb:"1E3A8A"}};
+    h1.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"DBEAFE"}};
     h1.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
     h1.border = thickBorder();
     ws.getRow(1).height = 28;
@@ -584,15 +584,15 @@ async function buildWorkbook(students, settings){
 
     const h2L = ws.getCell("A2");
     h2L.value = `${title} | ${mid}`;
-    h2L.font = {name:"Calibri", size:11, bold:true, color:{argb:"FFFFFF"}};
-    h2L.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"0E2A47"}};
+    h2L.font = {name:"Calibri", size:11, bold:true, color:{argb:"334155"}};
+    h2L.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"F8FAFC"}};
     h2L.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
     h2L.border = thickBorder();
 
     const h2R = ws.getCell("F2");
     h2R.value = dateStr ? `Tarih: ${dateStr}` : "";
-    h2R.font = {name:"Calibri", size:11, bold:true, color:{argb:"FFFFFF"}};
-    h2R.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"0E2A47"}};
+    h2R.font = {name:"Calibri", size:11, bold:true, color:{argb:"334155"}};
+    h2R.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"F8FAFC"}};
     h2R.alignment = {vertical:"middle", horizontal:"right", wrapText:true, shrinkToFit:true};
     h2R.border = thickBorder();
 
@@ -846,3 +846,4 @@ document.getElementById("btnDownload").addEventListener("click", async () => {
 </script>
 </body>
 </html>
+
