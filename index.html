@@ -224,34 +224,16 @@ th{
       <div style="margin-top:10px;">
         <label>Ders Bazlı Soru Sayıları</label>
         <div class="row3">
-          <div>
-            <label style="margin-bottom:4px;">Matematik</label>
-            <input id="qMat" type="number" min="0" step="1" />
-          </div>
-          <div>
-            <label style="margin-bottom:4px;">Türkçe</label>
-            <input id="qTurkce" type="number" min="0" step="1" />
-          </div>
-          <div>
-            <label style="margin-bottom:4px;">Fen</label>
-            <input id="qFen" type="number" min="0" step="1" />
-          </div>
+          <input id="qMat" type="number" min="0" step="1" placeholder="Matematik" />
+          <input id="qFen" type="number" min="0" step="1" placeholder="Fen" />
+          <input id="qTurkce" type="number" min="0" step="1" placeholder="Türkçe" />
         </div>
         <div class="row3" style="margin-top:10px;">
-          <div>
-            <label style="margin-bottom:4px;">Sosyal / İnkılap</label>
-            <input id="qSosyal" type="number" min="0" step="1" />
-          </div>
-          <div>
-            <label style="margin-bottom:4px;">İngilizce</label>
-            <input id="qIng" type="number" min="0" step="1" />
-          </div>
-          <div>
-            <label style="margin-bottom:4px;">Din Kültürü</label>
-            <input id="qDin" type="number" min="0" step="1" />
-          </div>
+          <input id="qSosyal" type="number" min="0" step="1" placeholder="Sosyal / İnkılap" />
+          <input id="qIng" type="number" min="0" step="1" placeholder="İngilizce" />
+          <input id="qDin" type="number" min="0" step="1" placeholder="Din" />
         </div>
-        <div class="hint">Analizde hangi ders gelirse, burada yazdığın sayı o derse otomatik uygulanır.</div>
+        <div class="hint">Analizde hangi ders gelirse, burada yazdığın ders bazlı soru sayısı otomatik kullanılır.</div>
       </div>
 
       <div class="row" style="margin-top:10px;">
@@ -262,11 +244,11 @@ th{
             <option value="0.8">Biraz azalt (×0.8)</option>
             <option value="1.2">Biraz artır (×1.2)</option>
           </select>
-          <div class="hint">İstersen tüm derslerde genel artır / azalt uygular.</div>
+          <div class="hint">Gerekirse tüm dersler için genel artır/azalt uygular.</div>
         </div>
         <div>
           <label>Öğretmen Notu</label>
-          <textarea id="teacherNote" placeholder="İsteğe bağlı öğretmen notu..." style="height:92px; resize:none;"></textarea>
+          <textarea id="teacherNote" style="height:110px;" placeholder="İsteğe bağlı öğretmen notu..."></textarea>
         </div>
       </div>
 
@@ -298,10 +280,10 @@ const title = "Kişiye Özel Haftalık Çalışma Programı";
 const DAYS = ["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
 
 const GRADE_DEFAULTS = {
-  5: { qNum: 5, qVer: 10 },
-  6: { qNum: 8, qVer: 12 },
-  7: { qNum: 10, qVer: 15 },
-  8: { qNum: 15, qVer: 20 },
+  5: { qMat: 5,  qFen: 5,  qTurkce: 10, qSosyal: 10, qIng: 10, qDin: 10 },
+  6: { qMat: 8,  qFen: 8,  qTurkce: 12, qSosyal: 12, qIng: 12, qDin: 12 },
+  7: { qMat: 10, qFen: 10, qTurkce: 15, qSosyal: 15, qIng: 15, qDin: 15 },
+  8: { qMat: 15, qFen: 15, qTurkce: 20, qSosyal: 20, qIng: 20, qDin: 20 },
 };
 
 const SUBJECT_META = {
@@ -330,20 +312,6 @@ function subjectMeta(name){
   return {code:name.slice(0,4).toUpperCase(), emoji:"", fill:"F3F4F6"};
 }
 
-function getQuestionCountForSubject(ders, settings){
-  const n = (ders || "").trim().toLowerCase();
-  let base = 0;
-  if(n.includes("mat")) base = Number(settings.qMat)||0;
-  else if(n.includes("türk") || n.includes("turk")) base = Number(settings.qTurkce)||0;
-  else if(n.includes("fen")) base = Number(settings.qFen)||0;
-  else if(n.includes("sos") || n.includes("ink")) base = Number(settings.qSosyal)||0;
-  else if(n.includes("ing")) base = Number(settings.qIng)||0;
-  else if(n.includes("din")) base = Number(settings.qDin)||0;
-  else base = Number(settings.qTurkce)||0;
-  const scale = Number(settings.qScale)||1;
-  return Math.max(0, Math.round(base * scale));
-}
-
 /* -------------------- UI wiring -------------------- */
 const elGrade = document.getElementById("grade");
 const elEngMode = document.getElementById("engMode");
@@ -351,8 +319,8 @@ const elDateMode = document.getElementById("dateMode");
 const elDateManual = document.getElementById("dateManual");
 const elThirdMode = document.getElementById("thirdMode");
 const elQMat = document.getElementById("qMat");
-const elQTurkce = document.getElementById("qTurkce");
 const elQFen = document.getElementById("qFen");
+const elQTurkce = document.getElementById("qTurkce");
 const elQSosyal = document.getElementById("qSosyal");
 const elQIng = document.getElementById("qIng");
 const elQDin = document.getElementById("qDin");
@@ -365,12 +333,12 @@ let BOOKS = null;
 function applyGradeDefaults(){
   const g = Number(elGrade.value);
   const d = GRADE_DEFAULTS[g];
-  elQMat.value = d.qNum;
-  elQFen.value = d.qNum;
-  elQTurkce.value = d.qVer;
-  elQSosyal.value = d.qVer;
-  elQIng.value = d.qVer;
-  elQDin.value = d.qVer;
+  elQMat.value = d.qMat;
+  elQFen.value = d.qFen;
+  elQTurkce.value = d.qTurkce;
+  elQSosyal.value = d.qSosyal;
+  elQIng.value = d.qIng;
+  elQDin.value = d.qDin;
 }
 applyGradeDefaults();
 
@@ -505,6 +473,21 @@ function isNumericSubject(ders){
   return n.includes("mat") || n.includes("fen");
 }
 
+function getQuestionCount(ders, settings){
+  const n = trLower(ders || "");
+  let base = 0;
+  if(n.includes("mat")) base = Number(settings.qMat) || 0;
+  else if(n.includes("fen")) base = Number(settings.qFen) || 0;
+  else if(n.includes("türk") || n.includes("turk")) base = Number(settings.qTurkce) || 0;
+  else if(n.includes("sos") || n.includes("ink")) base = Number(settings.qSosyal) || 0;
+  else if(n.includes("ing")) base = Number(settings.qIng) || 0;
+  else if(n.includes("din")) base = Number(settings.qDin) || 0;
+  else base = Number(settings.qTurkce) || 0;
+  const scale = Number(settings.qScale) || 1;
+  return Math.max(0, Math.round(base * scale));
+}
+
+
 function buildPlan(items, grade, thirdMode){
   // unique by (ders, konu) keeping best priority
   const seen = new Set();
@@ -631,8 +614,54 @@ async function buildWorkbook(students, settings){
     logoId = null;
   }
 
+  const layouts = {
+    2: {
+      columns: [
+        { key:"gun", width: 13 },
+        { key:"d1", width: 25 },
+        { key:"s1", width: 6 },
+        { key:"c1", width: 3 },
+        { key:"d2", width: 25 },
+        { key:"s2", width: 6 },
+        { key:"c2", width: 3 },
+        { key:"kitap", width: 13 },
+      ],
+      letters: { gun:"A", d1:"B", s1:"C", c1:"D", d2:"E", s2:"F", c2:"G", kitap:"H" },
+      lastCol: "H",
+      titleLeftEnd: "E",
+      titleRightStart: "F",
+      sign: { student:["A","C"], parent:["D","F"], info:["G","H"] },
+      note: { teacher:["A","C"], parent:["D","F"], info:["G","H"] }
+    },
+    3: {
+      columns: [
+        { key:"gun", width: 12 },
+        { key:"d1", width: 22 },
+        { key:"s1", width: 5.5 },
+        { key:"c1", width: 3 },
+        { key:"d2", width: 22 },
+        { key:"s2", width: 5.5 },
+        { key:"c2", width: 3 },
+        { key:"d3", width: 22 },
+        { key:"s3", width: 5.5 },
+        { key:"c3", width: 3 },
+        { key:"kitap", width: 13 },
+      ],
+      letters: { gun:"A", d1:"B", s1:"C", c1:"D", d2:"E", s2:"F", c2:"G", d3:"H", s3:"I", c3:"J", kitap:"K" },
+      lastCol: "K",
+      titleLeftEnd: "H",
+      titleRightStart: "I",
+      sign: { student:["A","D"], parent:["E","G"], info:["H","K"] },
+      note: { teacher:["A","D"], parent:["E","G"], info:["H","K"] }
+    }
+  };
+
   for(const st of students){
+    const {plan, use3} = buildPlan(st.items, settings.grade, settings.thirdMode);
+    const layout = layouts[use3 ? 3 : 2];
     const ws = wb.addWorksheet(`${st.numara}-${st.adi}`.slice(0,31));
+    ws.columns = layout.columns;
+
     const mid = `${st.sube} • No: ${st.numara} • ${st.adi}`;
     const selectedBook = (settings.bookOfMonth || "").trim();
     const teacherNote = (settings.teacherNote || "").trim();
@@ -648,50 +677,17 @@ async function buildWorkbook(students, settings){
       dateStr = formatDateTR(settings.dateManual);
     }
 
-    const {plan, use3} = buildPlan(st.items, settings.grade, settings.thirdMode);
-    const lastColLetter = use3 ? "K" : "H";
-    const titleMerge = use3 ? "I" : "F";
-    const infoMerge = use3 ? "H" : "F";
-    const dateStart = use3 ? "I" : "G";
-
-    if(use3){
-      ws.columns = [
-        { key:"gun", width: 13 },
-        { key:"d1", width: 24 },
-        { key:"s1", width: 6 },
-        { key:"c1", width: 3 },
-        { key:"d2", width: 24 },
-        { key:"s2", width: 6 },
-        { key:"c2", width: 3 },
-        { key:"d3", width: 24 },
-        { key:"s3", width: 6 },
-        { key:"c3", width: 3 },
-        { key:"kitap", width: 13 },
-      ];
-    }else{
-      ws.columns = [
-        { key:"gun", width: 13 },
-        { key:"d1", width: 28 },
-        { key:"s1", width: 6 },
-        { key:"c1", width: 3 },
-        { key:"d2", width: 28 },
-        { key:"s2", width: 6 },
-        { key:"c2", width: 3 },
-        { key:"kitap", width: 14 },
-      ];
-    }
-
-    ws.mergeCells(`A1:${titleMerge}1`);
+    ws.mergeCells(`A1:${layout.lastCol}1`);
     const h1 = ws.getCell("A1");
     h1.value = "ALTINKÜRE ORTAOKULU";
-    h1.font = {name:"Calibri", size:16, bold:true, color:{argb:"1E3A8A"}};
+    h1.font = {name:"Calibri", size:15, bold:true, color:{argb:"1E3A8A"}};
     h1.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"DBEAFE"}};
     h1.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
     h1.border = thickBorder();
-    ws.getRow(1).height = 28;
+    ws.getRow(1).height = 26;
 
-    ws.mergeCells(`A2:${infoMerge}2`);
-    ws.mergeCells(`${dateStart}2:${lastColLetter}2`);
+    ws.mergeCells(`A2:${layout.titleLeftEnd}2`);
+    ws.mergeCells(`${layout.titleRightStart}2:${layout.lastCol}2`);
     const h2L = ws.getCell("A2");
     h2L.value = `${title} | ${mid}`;
     h2L.font = {name:"Calibri", size:11, bold:true, color:{argb:"334155"}};
@@ -699,108 +695,87 @@ async function buildWorkbook(students, settings){
     h2L.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
     h2L.border = thickBorder();
 
-    const h2R = ws.getCell(`${dateStart}2`);
+    const h2R = ws.getCell(`${layout.titleRightStart}2`);
     h2R.value = dateStr ? `Tarih: ${dateStr}` : "";
     h2R.font = {name:"Calibri", size:11, bold:true, color:{argb:"334155"}};
     h2R.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"F8FAFC"}};
-    h2R.alignment = {vertical:"middle", horizontal:"right", wrapText:true, shrinkToFit:true};
+    h2R.alignment = {vertical:"middle", horizontal:"right", wrapText:true};
     h2R.border = thickBorder();
-    ws.getRow(2).height = 24;
+    ws.getRow(2).height = 22;
 
     if(logoId){
       ws.addImage(logoId, {
-        tl: { col: use3 ? 8.05 : 5.95, row: 0.15 },
-        ext: { width: 100, height: 36 }
+        tl: { col: Math.max(layout.columns.length - 1.8, 5), row: 0.18 },
+        ext: { width: 95, height: 34 }
       });
     }
 
     const startRow = 4;
     const headers = use3 ? [
-      {cell:"A", val:"Gün"},
-      {cell:"B", val:"1. Ders"},
-      {cell:"C", val:"Soru"},
-      {cell:"D", val:"☐"},
-      {cell:"E", val:"2. Ders"},
-      {cell:"F", val:"Soru"},
-      {cell:"G", val:"☐"},
-      {cell:"H", val:"3. Ders"},
-      {cell:"I", val:"Soru"},
-      {cell:"J", val:"☐"},
-      {cell:"K", val:"Kitap Okuma
-(Sayfa)"},
+      ["A","Gün"],["B","1. Ders"],["C","Soru"],["D","☐"],["E","2. Ders"],["F","Soru"],["G","☐"],["H","3. Ders"],["I","Soru"],["J","☐"],["K","Kitap Okuma\n(Sayfa)"]
     ] : [
-      {cell:"A", val:"Gün"},
-      {cell:"B", val:"1. Ders"},
-      {cell:"C", val:"Soru"},
-      {cell:"D", val:"☐"},
-      {cell:"E", val:"2. Ders"},
-      {cell:"F", val:"Soru"},
-      {cell:"G", val:"☐"},
-      {cell:"H", val:"Kitap Okuma
-(Sayfa)"},
+      ["A","Gün"],["B","1. Ders"],["C","Soru"],["D","☐"],["E","2. Ders"],["F","Soru"],["G","☐"],["H","Kitap Okuma\n(Sayfa)"]
     ];
-    for(const h of headers){
-      const c = ws.getCell(`${h.cell}${startRow}`);
-      c.value = h.val;
+    for(const [col,val] of headers){
+      const c = ws.getCell(`${col}${startRow}`);
+      c.value = val;
       c.font = font({bold:true, color:{argb:"FF111827"}});
       c.fill = fill("#DBEAFE");
       c.alignment = center();
       c.border = thickBorder();
     }
-    ws.getRow(startRow).height = 28;
+    ws.getRow(startRow).height = 24;
+
+    const slotDefs = use3
+      ? [
+          {topicKey:"d1", d:"B", s:"C", c:"D"},
+          {topicKey:"d2", d:"E", s:"F", c:"G"},
+          {topicKey:"d3", d:"H", s:"I", c:"J"},
+        ]
+      : [
+          {topicKey:"d1", d:"B", s:"C", c:"D"},
+          {topicKey:"d2", d:"E", s:"F", c:"G"},
+        ];
 
     const baseRow = startRow + 1;
     for(let i=0;i<7;i++){
-      const rowIdx = baseRow+i;
-      const r = ws.getRow(rowIdx);
-      r.height = 48;
+      const rowNumber = baseRow + i;
+      ws.getRow(rowNumber).height = 44;
 
-      const dayCell = ws.getCell(`A${rowIdx}`);
+      const dayCell = ws.getCell(`A${rowNumber}`);
       dayCell.value = DAYS[i];
       dayCell.font = font({bold:true, color:{argb:"FF111827"}});
       dayCell.fill = fill("#DBEAFE");
       dayCell.alignment = center();
       dayCell.border = thickBorder();
 
-      const slots = use3 ? [
-        {topic: plan[i].d1, colD:"B", colS:"C", colC:"D"},
-        {topic: plan[i].d2, colD:"E", colS:"F", colC:"G"},
-        {topic: plan[i].d3, colD:"H", colS:"I", colC:"J"},
-      ] : [
-        {topic: plan[i].d1, colD:"B", colS:"C", colC:"D"},
-        {topic: plan[i].d2, colD:"E", colS:"F", colC:"G"},
-      ];
-
-      for(const sl of slots){
-        const t = sl.topic || {ders:"", konu:"", prio:999};
+      for(const sl of slotDefs){
+        const t = plan[i][sl.topicKey] || {ders:"", konu:""};
         const meta = subjectMeta(t.ders);
-        const dersText = t.ders ? `${meta.emoji} ${meta.code} • ${t.ders}`.trim() : "";
-        const konuText = t.konu ? `${t.konu}` : "";
-        const full = (dersText && konuText) ? `${dersText}
-${konuText}` : (dersText || konuText || "");
+        const hasData = !!(t.ders || t.konu);
 
-        const dCell = ws.getCell(`${sl.colD}${rowIdx}`);
-        dCell.value = full;
+        const dCell = ws.getCell(`${sl.d}${rowNumber}`);
+        dCell.value = hasData ? `${meta.emoji} ${meta.code} • ${t.ders}\n${t.konu}` : "";
         dCell.font = font({bold:true, size:10});
         dCell.alignment = leftWrap();
         dCell.fill = fill("#"+meta.fill);
         dCell.border = thickBorder();
 
-        const sCell = ws.getCell(`${sl.colS}${rowIdx}`);
-        sCell.value = t.ders ? getQuestionCountForSubject(t.ders, settings) : "";
+        const sCell = ws.getCell(`${sl.s}${rowNumber}`);
+        sCell.value = hasData ? getQuestionCount(t.ders, settings) : "";
         sCell.alignment = center();
         sCell.fill = fill("#FFF7CC");
         sCell.border = thickBorder();
         sCell.font = font({bold:true});
 
-        const cCell = ws.getCell(`${sl.colC}${rowIdx}`);
+        const cCell = ws.getCell(`${sl.c}${rowNumber}`);
         cCell.value = "";
         cCell.alignment = center();
         cCell.border = thickBorder();
       }
 
       const bookCol = use3 ? "K" : "H";
-      const bookCell = ws.getCell(`${bookCol}${rowIdx}`);
+      const bookCell = ws.getCell(`${bookCol}${rowNumber}`);
       bookCell.value = "";
       bookCell.alignment = center();
       bookCell.fill = fill("#EAF7EA");
@@ -809,13 +784,14 @@ ${konuText}` : (dersText || konuText || "");
     }
 
     const warnRowIdx = baseRow + 8;
-    ws.getRow(warnRowIdx).height = 34;
-    ws.getCell(`A${warnRowIdx}`).value = "Uyarı:";
-    ws.getCell(`A${warnRowIdx}`).font = font({bold:true, italic:true, color:{argb:"FFB91C1C"}});
-    ws.getCell(`A${warnRowIdx}`).alignment = {vertical:"middle", horizontal:"left"};
-    ws.getCell(`A${warnRowIdx}`).border = thickBorder();
+    ws.getRow(warnRowIdx).height = 32;
+    const warnLabel = ws.getCell(`A${warnRowIdx}`);
+    warnLabel.value = "Uyarı:";
+    warnLabel.font = font({bold:true, italic:true, color:{argb:"FFB91C1C"}});
+    warnLabel.alignment = {vertical:"middle", horizontal:"left"};
+    warnLabel.border = thickBorder();
 
-    ws.mergeCells(`B${warnRowIdx}:${lastColLetter}${warnRowIdx}`);
+    ws.mergeCells(`B${warnRowIdx}:${layout.lastCol}${warnRowIdx}`);
     const warnCell = ws.getCell(`B${warnRowIdx}`);
     warnCell.value = "Ödevleri aksatmayacak şekilde, sınav analizlerinde eksik olan bu konulara çalışıyorsun. Soru çözerek konuları pekiştiriyorsun.";
     warnCell.font = font({bold:true, color:{argb:"FF7A1F1F"}});
@@ -823,104 +799,75 @@ ${konuText}` : (dersText || konuText || "");
     warnCell.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
     warnCell.border = thickBorder();
 
-    const bookRow = warnRowIdx + 1;
+    let cursorRow = warnRowIdx + 1;
     if(selectedBook){
-      ws.mergeCells(`A${bookRow}:${lastColLetter}${bookRow}`);
-      const bk = ws.getCell(`A${bookRow}`);
+      ws.mergeCells(`A${cursorRow}:${layout.lastCol}${cursorRow}`);
+      const bk = ws.getCell(`A${cursorRow}`);
       bk.value = `AYIN KİTABI: ${selectedBook}`;
-      bk.font = font({bold:true, size:12, color:{argb:"FF111827"}});
+      bk.font = font({bold:true, size:11, color:{argb:"FF111827"}});
       bk.fill = fill("#EEFCEB");
       bk.alignment = {vertical:"middle", horizontal:"left", wrapText:true};
       bk.border = thickBorder();
-      ws.getRow(bookRow).height = 24;
+      ws.getRow(cursorRow).height = 22;
+      cursorRow++;
     }
 
-    const signRow = selectedBook ? (bookRow + 1) : (warnRowIdx + 2);
-    if(use3){
-      ws.mergeCells(`A${signRow}:D${signRow}`);
-      ws.mergeCells(`E${signRow}:G${signRow}`);
-      ws.mergeCells(`H${signRow}:K${signRow}`);
-      ws.getCell(`A${signRow}`).value = "Öğrenci İmza:";
-      ws.getCell(`E${signRow}`).value = "Veli İmza:";
-      ws.getCell(`H${signRow}`).value = "Sınavza Notu";
-      for(const ref of [`A${signRow}`,`E${signRow}`,`H${signRow}`]){
-        const c = ws.getCell(ref);
-        c.font = font({bold:true});
-        c.alignment = {vertical:"middle", horizontal:"left"};
-        c.border = thickBorder();
-        c.fill = fill("#F8FAFC");
-      }
+    // signature row
+    const sign = layout.sign;
+    ws.mergeCells(`${sign.student[0]}${cursorRow}:${sign.student[1]}${cursorRow}`);
+    ws.mergeCells(`${sign.parent[0]}${cursorRow}:${sign.parent[1]}${cursorRow}`);
+    ws.mergeCells(`${sign.info[0]}${cursorRow}:${sign.info[1]}${cursorRow}`);
 
-      const noteTop = signRow + 1;
-      ws.mergeCells(`A${noteTop}:D${noteTop+3}`);
-      ws.mergeCells(`E${noteTop}:G${noteTop+3}`);
-      ws.mergeCells(`H${noteTop}:K${noteTop+3}`);
-      const teacherCell = ws.getCell(`A${noteTop}`);
-      teacherCell.value = teacherNote ? `ÖĞRETMEN NOTU:
-${teacherNote}` : "ÖĞRETMEN NOTU:";
-      teacherCell.alignment = {vertical:"top", horizontal:"left", wrapText:true};
-      teacherCell.border = thickBorder();
-      teacherCell.fill = fill("#FFFDF2");
-      teacherCell.font = font({bold:true});
+    const sig1 = ws.getCell(`${sign.student[0]}${cursorRow}`);
+    sig1.value = "Öğrenci İmza:";
+    sig1.font = font({bold:true});
+    sig1.alignment = {vertical:"middle", horizontal:"left"};
+    sig1.border = thickBorder();
 
-      const parentCell = ws.getCell(`E${noteTop}`);
-      parentCell.value = "VELİ NOTU:";
-      parentCell.alignment = {vertical:"top", horizontal:"left", wrapText:true};
-      parentCell.border = thickBorder();
-      parentCell.fill = fill("#F9FAFB");
-      parentCell.font = font({bold:true});
+    const sig2 = ws.getCell(`${sign.parent[0]}${cursorRow}`);
+    sig2.value = "Veli İmza:";
+    sig2.font = font({bold:true});
+    sig2.alignment = {vertical:"middle", horizontal:"left"};
+    sig2.border = thickBorder();
 
-      const sysCell = ws.getCell(`H${noteTop}`);
-      sysCell.value = "SINAVZA NOTU:
-Bu plan, sınav analizine göre kişiye özel hazırlanmıştır.";
-      sysCell.alignment = {vertical:"top", horizontal:"left", wrapText:true};
-      sysCell.border = thickBorder();
-      sysCell.fill = fill("#EFF6FF");
-      sysCell.font = font({bold:true});
-      for(let rr=noteTop; rr<=noteTop+3; rr++) ws.getRow(rr).height = 24;
-    }else{
-      ws.mergeCells(`A${signRow}:C${signRow}`);
-      ws.mergeCells(`D${signRow}:F${signRow}`);
-      ws.mergeCells(`G${signRow}:H${signRow}`);
-      ws.getCell(`A${signRow}`).value = "Öğrenci İmza:";
-      ws.getCell(`D${signRow}`).value = "Veli İmza:";
-      ws.getCell(`G${signRow}`).value = "Sınavza Notu";
-      for(const ref of [`A${signRow}`,`D${signRow}`,`G${signRow}`]){
-        const c = ws.getCell(ref);
-        c.font = font({bold:true});
-        c.alignment = {vertical:"middle", horizontal:"left"};
-        c.border = thickBorder();
-        c.fill = fill("#F8FAFC");
-      }
+    const sig3 = ws.getCell(`${sign.info[0]}${cursorRow}`);
+    sig3.value = "Sınavza";
+    sig3.font = font({bold:true});
+    sig3.alignment = center();
+    sig3.border = thickBorder();
+    ws.getRow(cursorRow).height = 22;
 
-      const noteTop = signRow + 1;
-      ws.mergeCells(`A${noteTop}:C${noteTop+3}`);
-      ws.mergeCells(`D${noteTop}:F${noteTop+3}`);
-      ws.mergeCells(`G${noteTop}:H${noteTop+3}`);
-      const teacherCell = ws.getCell(`A${noteTop}`);
-      teacherCell.value = teacherNote ? `ÖĞRETMEN NOTU:
-${teacherNote}` : "ÖĞRETMEN NOTU:";
-      teacherCell.alignment = {vertical:"top", horizontal:"left", wrapText:true};
-      teacherCell.border = thickBorder();
-      teacherCell.fill = fill("#FFFDF2");
-      teacherCell.font = font({bold:true});
+    // note boxes
+    const noteStart = cursorRow + 1;
+    const noteEnd = noteStart + 3;
+    const notes = layout.note;
 
-      const parentCell = ws.getCell(`D${noteTop}`);
-      parentCell.value = "VELİ NOTU:";
-      parentCell.alignment = {vertical:"top", horizontal:"left", wrapText:true};
-      parentCell.border = thickBorder();
-      parentCell.fill = fill("#F9FAFB");
-      parentCell.font = font({bold:true});
+    ws.mergeCells(`${notes.teacher[0]}${noteStart}:${notes.teacher[1]}${noteEnd}`);
+    ws.mergeCells(`${notes.parent[0]}${noteStart}:${notes.parent[1]}${noteEnd}`);
+    ws.mergeCells(`${notes.info[0]}${noteStart}:${notes.info[1]}${noteEnd}`);
 
-      const sysCell = ws.getCell(`G${noteTop}`);
-      sysCell.value = "SINAVZA NOTU:
-Bu plan, sınav analizine göre kişiye özel hazırlanmıştır.";
-      sysCell.alignment = {vertical:"top", horizontal:"left", wrapText:true};
-      sysCell.border = thickBorder();
-      sysCell.fill = fill("#EFF6FF");
-      sysCell.font = font({bold:true});
-      for(let rr=noteTop; rr<=noteTop+3; rr++) ws.getRow(rr).height = 24;
-    }
+    const teacherCell = ws.getCell(`${notes.teacher[0]}${noteStart}`);
+    teacherCell.value = teacherNote ? `ÖĞRETMEN NOTU\n${teacherNote}` : "ÖĞRETMEN NOTU";
+    teacherCell.font = font({bold:true});
+    teacherCell.alignment = {vertical:"top", horizontal:"left", wrapText:true};
+    teacherCell.fill = fill("#F8FAFC");
+    teacherCell.border = thickBorder();
+
+    const parentCell = ws.getCell(`${notes.parent[0]}${noteStart}`);
+    parentCell.value = "VELİ NOTU";
+    parentCell.font = font({bold:true});
+    parentCell.alignment = {vertical:"top", horizontal:"left", wrapText:true};
+    parentCell.fill = fill("#F8FAFC");
+    parentCell.border = thickBorder();
+
+    const infoCell = ws.getCell(`${notes.info[0]}${noteStart}`);
+    infoCell.value = "SINAVZA NOTU\nBu plan, analiz verisindeki öncelikli konulara göre kişiye özel hazırlanmıştır.";
+    infoCell.font = font({bold:true});
+    infoCell.alignment = {vertical:"top", horizontal:"left", wrapText:true};
+    infoCell.fill = fill("#EFF6FF");
+    infoCell.border = thickBorder();
+
+    for(let rr = noteStart; rr <= noteEnd; rr++) ws.getRow(rr).height = 22;
 
     ws.pageSetup = {
       orientation: "landscape",
@@ -928,7 +875,7 @@ Bu plan, sınav analizine göre kişiye özel hazırlanmıştır.";
       fitToWidth: 1,
       fitToHeight: 0,
       paperSize: 9,
-      margins: { left:0.2, right:0.2, top:0.3, bottom:0.3, header:0.15, footer:0.15 }
+      margins: { left:0.25, right:0.25, top:0.35, bottom:0.35, header:0.2, footer:0.2 }
     };
     ws.views = [{ state: "frozen", xSplit: 0, ySplit: startRow }];
     ws.pageSetup.horizontalCentered = true;
@@ -968,14 +915,14 @@ document.getElementById("btnDownload").addEventListener("click", async () => {
       dateManual: elDateManual.value,
       thirdMode: elThirdMode.value,
       qMat: elQMat.value,
-      qTurkce: elQTurkce.value,
       qFen: elQFen.value,
+      qTurkce: elQTurkce.value,
       qSosyal: elQSosyal.value,
       qIng: elQIng.value,
       qDin: elQDin.value,
       qScale: elQScale.value,
-      teacherNote: elTeacherNote ? elTeacherNote.value : "",
       bookOfMonth: elBookMonth ? elBookMonth.value : "",
+      teacherNote: elTeacherNote ? elTeacherNote.value : "",
     };
 
     const wb = await buildWorkbook(students, settings);
@@ -996,6 +943,5 @@ document.getElementById("btnDownload").addEventListener("click", async () => {
 </script>
 </body>
 </html>
-
 
 
